@@ -68,6 +68,7 @@ plot_rcs <- function(y, compartment = "R", shade_weeks = c(0,0),
                   # ymin=0, ymax=Inf), fill = "skyblue", alpha = .2) +
     geom_line(aes(x=time, y=prevalence, group=age_group, color=age_group)) +
     {if(!is.null(start_date)) scale_x_date(limits = c(as.Date(start_date), as.Date(end_date)))} +
+    labs(y = compartment) +
     scale_color_viridis_d()
 }
 
