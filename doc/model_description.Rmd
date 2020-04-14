@@ -1,0 +1,71 @@
+---
+title: "Epidemiological model used by the tool"
+author: "Witold Wiecek (Certara)"
+date: "April 2020"
+output: 
+  html_document:
+    toc: true
+bibliography: gates.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction: SEIR models for infectious disease modelling
+
+The model in this tool is a type of SEIR model. SEIR stands for Susceptible-Exposed-Infectious-Recovered, a type of mathematical formalism commonly used for modelling of how infectious diseases spread in populations. Such models are the most common tools that have been used to historically model spread of malaria, HIV, seasonal influenza and other circulating viruses. They are the main tool used by epidemiologists and statisticians to better understand the ongoing coronavirus epidemic: see e.g. @hauser_estimation_2020.
+
+SEIR formalism relies on an assumption that individuals within any defined group (e.g. children, healthcare workers) make contacts with each other at random. And alternative to this is to use agent-based modelling (ABM) (see @ferguson_strategies_2005), which allow us to make more precise and detailed assumptions on how individuals make contact with each other, e.g. within households, schools, workplaces. However, the advantage of SEIR modelling is that 1) we can simulate epidemics quickly, 2) it is possible to directly make statistical inference on parameters that SEIR models use (@chatzilena_contemporary_2019).
+
+SEIR modelling can be linked to pharmacometric models and other types of models used in healthcare (e.g. cost effectiveness modelling) to assess new pharmaceutical interventions, see e.g. @rayner_pharmacokinetic-pharmacodynamic_2013, @kamal_interdisciplinary_2017. If the models are well-calibrated, they also let us to compare counterfactual scenarios, i.e. answer the question of what is/was likely to happen in a given situation had an intervention was available; see e.g. @rajaram_impact_2017.
+
+
+
+# Basic SEIR model (a single group)
+
+We first present the model within the context of any given group. By group we mean a certain group of individuals such as "children under 10 without access to the intervention". We will explain division into the groups in a moment. 
+
+SEIR model is a set of [ordinary differential equations](https://en.wikipedia.org/wiki/Ordinary_differential_equation), a mathematical way of characterising the rate (number of individuals per unit of time) at which number of susceptible/exposed/infected/recovered individuals grows. Parameters are force of infection $\beta$ (more on which below) and $\gamma$, reciprocal of time spent in exposed and infected state.
+
+Formally, we can write the model using the following set of ODEs:
+
+$$
+\text{d}E/\text{d}t = \beta S - \gamma_1 E \\
+\text{d}I_1/\text{d}t = \gamma_1 E   - \gamma_2I_1 \\
+\text{d}I_2/\text{d}t = p_H\gamma_2 I_1 - \gamma_3I_2 \\
+\text{d}I_3/\text{d}t = p_C\gamma_3 I_2 - \gamma_4I_3 \\
+\text{d}R/\text{d}t = \gamma_2 I_1 (1-p_H) + \gamma_3 I_2 (1-p_C) +\gamma_2I_1 (1-p_D) \\
+\text{d}D/\text{d}t = \gamma_4I_3p_D
+$$
+
+Note how to the four "main" groups (S, E, I, R) we added: number of dead (due to the virus) individuals $D$ and we divide infected into those with mild symptoms ($I_1$), severe symptoms requiring hospitalisation ($I_2$) and in critical care ($I_3$). We assume that individuals progress from I1 to I2 to I3, with possibility of recovery at any stage described by parameters $p_H$ (probability of hospitalisation), $p_C$ (proability of needing critical care) and $p_D$ (probability of death).
+
+## Force of infection
+
+If modelling only a single group, $\beta$ is given as a factor of $q$, probability of virus transmission when making contact, $c$, number of  contacts with other individuals (in an unit of time) and proportion of infected individuals, $I_1 + I_2+ I_3$. When modelling many groups, $\beta$ links them together by allowing for the fact that individuals in "our" group make contacts with "other" groups. Therefore if we denote by $k$all available groups, $\beta = \sum q c_k I_k$ (where $I_k$ is shorthand for "all infected in group $k$"). 
+
+
+
+
+# Modelling many groups
+
+* We model many ages and special status or level of compliance with social distancing
+* This introduces need for a contact matrix
+* Refining variation in R0 (Wearing et al)
+* Among other things, this allows us to account for NPI and PI
+
+
+# Accounting for interventions with the SEIR model
+
+Possible impact of the intervention:
+
+* Decrease likelihood of transmission (lower/no susceptibility)
+* Shorten duration of illness
+* Decrease number of contacts, especially among certain groups (e.g. schoolchildren when closing schools)
+* Reduce probability of hospitalisation or death among infected
+
+
+# References
+
