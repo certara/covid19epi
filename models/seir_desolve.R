@@ -24,39 +24,25 @@ sir_ode <- function(times,init,parms){
 sir_ode_ages <- function(times,init,parms){
   with(as.list(c(parms)), {
     ll <- vector(length = length(init))
-    
+    for(k in 1:Ngroups){
+      # j <- (k-1)*7
+      i <- (k-1)*N_c
+      S    <- init[i+1];
+      E    <- init[i+2]; I1 <- init[i+3];
+      I2   <- init[i+4]; I3 <- init[i+5];
+      D    <- init[i+6]; R  <- init[i+7];
       
-      # for(j in 1:N_groups) {
-      #   //we use I1 _temporarily_ to store _all_ infected  in group j
-      #   I1 = y[N_c*(j-1) + 2] + y[N_c*(j-1) + 3] + y[N_c*(j-1) + 4] + y[N_c*(j-1) + 5];
-      #   //we use column k of contacts matrix, because columns denote "contacts to ..."
-      #   // transmis. * suscept. * proportion inf. in k * contacts with 'k'
-      #   force += q[k] * (I1) * contacts_scaling[k] * x_r[(N_groups * N_weeks) + (j-1)*N_groups + k];
-      #   
-      #   /* To clean up notation you can use this:
-      #     real contacts[N_groups*N_groups] = 
-      #     x_r[(N_groups*N_weeks + 1):(N_groups*N_weeks + N_groups*N_groups)];
-      #   */
-      # }
-    
-
-    
-    for(i in 1:Ngroups){
-      j <- (i-1)*7
-      S    <- init[j+1];
-      E    <- init[j+2]; I1 <- init[j+3];
-      I2   <- init[j+4]; I3 <- init[j+5];
-      D    <- init[j+6]; R  <- init[j+7];
+      force <- 0
+      for(j in 1:Ngroups)
+        force <- force + q[k] * contacts[j,k] * (init[N_c*(j-1) + 3] + init[N_c*(j-1) + 4] + init[N_c*(j-1) + 5])
       
-      force <- beta[i]
-      
-      ll[(i-1)*7 + 1]  <- -force*S*I1
-      ll[(i-1)*7 + 2]  <- force*S*I1 - gamma1[i]*E
-      ll[(i-1)*7 + 3]  <- gamma1[i]*E - gamma2_i1[i]*I1
-      ll[(i-1)*7 + 4]  <- gamma2_i1[i]*I1*p_hosp[i] - gamma2_i2[i]*I2
-      ll[(i-1)*7 + 5]  <- gamma2_i2[i]*I2*p_severe[i]  - gamma2_i3[i]*I3
-      ll[(i-1)*7 + 6]  <- gamma2_i3[i]*I3*(1-p_death[i]) + gamma2_i1[i]*I1*(1-p_hosp[i]) + gamma2_i2[i]*I2*(1-p_severe[i])
-      ll[(i-1)*7 + 7]  <- gamma2_i3[i]*I3*p_death[i]
+      ll[i + 1]  <- -force*S
+      ll[i + 2]  <- force*S - gamma1[k]*E
+      ll[i + 3]  <- gamma1[k]*E - gamma2_i1[k]*I1
+      ll[i + 4]  <- gamma2_i1[k]*I1*p_hosp[k] - gamma2_i2[k]*I2
+      ll[i + 5]  <- gamma2_i2[k]*I2*p_severe[k]  - gamma2_i3[k]*I3
+      ll[i + 6]  <- gamma2_i3[k]*I3*p_death[k]
+      ll[i + 7]  <- gamma2_i3[k]*I3*(1-p_death[k]) + gamma2_i1[k]*I1*(1-p_hosp[k]) + gamma2_i2[k]*I2*(1-p_severe[k])
     }
     list(ll)
   })
@@ -71,12 +57,13 @@ run_covid_desolve <- function(times = 1:100,
   # Without age groups:
   # parms <- lapply(parms, function(x) if(length(x) > 1) x <- x[1])
   # lsoda(y0,times,sir_ode,parms)
+  
   # With age groups:
-  # parms <- lapply(parms, function(x) if(length(x) > 1) x <- x[1])
   parms$Ngroups <- 9
-  y0_long <- y0
-  for(i in 1:8)
-    y0_long <- append(y0_long, y0)
-  lsoda(y0_long,times,sir_ode_ages,parms)
+  parms$N_c <- 7
+  # y0_long <- y0
+  # for(i in 1:8)
+    # y0_long <- append(y0_long, y0)
+  lsoda(y0,times,sir_ode_ages,parms)
   
 }
