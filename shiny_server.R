@@ -54,20 +54,12 @@ server <- shinyServer(function(input, output, session) {
   
   
   seir_model <- reactive({
-    # pars <- default_seir_parameters
-    
-    # if(!is.null(input$add_pi_toggle))
-    # if(input$add_pi_toggle)
-    
-    
-    # Collect parameter settings that the user set:
-    # for(nm in names(inputs_to_manipulate))
-    # if(!is.null(input[[nm]]))
-    # pars[[nm]] <- input[[nm]]
     if(is.null(seir_pars_nonpi()))
       return(NULL)
     
-    do.call(run_covid_simulation, seir_pars_nonpi())
+    pars <- seir_pars_nonpi()
+    # pars$method <- "stan"
+    do.call(run_covid_simulation, pars)
   })
   
   output$panel1_plot <- renderPlot({

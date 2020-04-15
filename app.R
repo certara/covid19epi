@@ -6,12 +6,15 @@
 
 # loading libraries -----
 library(shiny)
-
+library(rstan)
+library(devtools)
+# install_github("wwiecek/stanseir")
 
 # set-up code -----
 source("default_covid_parameters.R")
 source("covid_model_function.R")
 source("covid_interventions.R")
+source("helper_functions.R")
 
 convert_settings_to_par <- function(settings, pars) {
   Ngroups <- pars[["Ngroups"]]
