@@ -37,9 +37,9 @@ run_covid_simulation <- function(method = "desolve",
   y0[2,] <- initial_infected_prop
   
   if(method == "desolve") {
-    beta <- q
-    parms <- listN(beta, gamma1, gamma2_i1, gamma2_i2, gamma2_i3, p_severe, p_hosp, p_death)
-    y <- run_covid_desolve(times, parms = parms)
+    # beta <- q
+    parms <- listN(q, gamma1, gamma2_i1, gamma2_i2, gamma2_i3, p_severe, p_hosp, p_death, contacts)
+    y <- run_covid_desolve(times, y0 = c(y0), parms = parms)
     times_ode <- y[,"time"]
     y <- y[,-1] #remove time column!
     y <- array(y, dim = c(length(times_ode), Ncompartments, Ngroups),
