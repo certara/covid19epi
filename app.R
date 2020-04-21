@@ -38,11 +38,11 @@ convert_settings_to_par <- function(settings, pars) {
                                          countries = settings$country,
                                          age.limits = c(0, 10, 20, 30, 40, 50, 60, 70, 80))$matrix
   
-  # Initially infected proportion
+  # Initially exposed proportion
   if(!is.null(settings$initial_infected_prop)){
-    pars[["initial_infected_prop"]] <- as.numeric(settings$initial_infected_prop)
+    pars$N[["S"]] <- 1-as.numeric(settings$initial_infected_prop)
+    pars$N[["E"]] <- as.numeric(settings$initial_infected_prop)
   }
-  
   
   pars[["r0"]] <- NULL
   
@@ -52,7 +52,6 @@ convert_settings_to_par <- function(settings, pars) {
   pars
 }
   
-
 
 
 # running the NMA tool -----

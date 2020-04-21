@@ -20,16 +20,6 @@ server <- shinyServer(function(input, output, session) {
     })
   })
   
-  output$set_starting_ui <- renderUI({
-    if(input$set_starting_toggle == 0)
-      return(selectInput("initial_infected_prop", label = "Initial infected proportion",
-                         choices = c("One in million" = 1e-06, "Five per million" = 5e-06,
-                                     "One per 100,000" = 1e-05, "One per 10,000" = 1e-04,
-                                     "One per 1,000" = 1e-03)))
-    if(input$set_starting_toggle == 1)
-      return(NULL)
-  })
-  
   seir_pars_no_i <- reactive({
     convert_settings_to_par(input, default_seir_parameters)
   })
@@ -63,10 +53,26 @@ server <- shinyServer(function(input, output, session) {
     }
     pars
   })
+
   
-  pop_size <-reactive({
+  
+  
+  # Starting population -----
+  output$set_starting_ui <- renderUI({
+    if(input$set_starting_toggle == 0)
+      return(selectInput("initial_infected_prop", label = "Initial infected proportion",
+                         choices = c("One in million" = 1e-06, "Five per million" = 5e-06,
+                                     "One per 100,000" = 1e-05, "One per 10,000" = 1e-04,
+                                     "One per 1,000" = 1e-03), selected = 1e-04))
+    if(input$set_starting_toggle == 1)
+      return(NULL)
+  })
+  
+  
+  pop_size <- reactive({
     return(1)
   })
+  
   
   seir_model <- reactive({
     if(is.null(seir_pars_nonpi()))
@@ -132,9 +138,9 @@ server <- shinyServer(function(input, output, session) {
     
     if(input$add_pi_toggle == "basic_pro")
       return(list(
-        sliderInput("add_pro_use_key", "% of NPI ('key workers') treated",
+        sliderInput("add_pro_use_key", "% of NPI ('key workers') immunised",
                     min = 0, max = 100, value = 5),
-        sliderInput("add_pro_use_nonkey", "% of non-NPI population treated",
+        sliderInput("add_pro_use_nonkey", "% of non-NPI population immunised",
                     min = 0, max = 100, value = 0),
         HTML("<i>If no NPI is used, we assume that all population is 'non-key'</i>"),
         sliderInput("add_pro_length", "Average length of immunity (weeks)", 
@@ -151,7 +157,7 @@ server <- shinyServer(function(input, output, session) {
                     min = 0, max = 100, value = 0),
         HTML("<i>If no NPI is used, we assume that all population is 'non-key'</i>"),
         sliderInput("add_at_gamma", "Average duration of illness in treated", 
-                    min = 0, max = 52, value = 5, step = 1),
+                    min = 0, max = 52, value = 5, step = 1)
       ))
     
     if(input$add_pi_toggle == "no")

@@ -40,6 +40,7 @@ add_npi <- function(params, prop = 0, scaling_const = 1){
   new_int$Ngroups <- Nint*Ngroups
   new_int$group_names <- c(paste(new_int$group_names, ", no intervention"),
                            paste(new_int$group_names, ", with intervention"))
+  # new_int$N           <- c(new_int$N*(1 - prop), new_int$N*prop)
   new_int <- lapply(new_int, function(x) if(length(x) == 9) return(c(x,x)) else return(x))
 }
 # ww <- do.call(run_covid_simulation, add_one_int())

@@ -14,11 +14,13 @@ source("models/seir_desolve.R")
 run_covid_simulation <- function(method = "desolve", 
                                  Nweeks = 52,
                                  Ngroups = 9,
+                                 r0 = NULL,
                                  y0 = NULL,
+                                 N  = c("S" = 1 - 1e-05, "E" = 1e-05, "As" = 0, 
+                                        "I1" = 0, "I2" = 0, "I3" = 0, "D" = 0, "R" = 0, "Im" = 0),
                                  contacts = matrix(13.5/Ngroups, Ngroups, Ngroups),
                                  contacts_scaling = matrix(1, Ngroups, Nweeks),
                                  group_names = paste("Group", 1:Ngroups),
-                                 initial_infected_prop = 2e-07,
                                  vaccination_rates = NA, #for now ignored
                                  # arguments that will be packed into theta
                                  q = rep(2.2/(13.5*6.5), Ngroups), 
@@ -34,11 +36,12 @@ run_covid_simulation <- function(method = "desolve",
   N_c <- 9 #number of compartments
   times <- c(1, seq(2, Nweeks*7, 2))
   
+  
   # Initial state:
   if(is.null(y0)){
-    y0 <- matrix(0, N_c, Ngroups)
-    y0[1,] <- rep(1,Ngroups) - initial_infected_prop
-    y0[2,] <- initial_infected_prop
+    if(sum(N) != 1)
+      warning("starting N's should sum to 1")
+    y0 <- matrix(rep(N, Ngroups), N_c, Ngroups)
   }
   
   if(method == "desolve") {
