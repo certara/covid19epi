@@ -22,7 +22,15 @@ ui <- shinyUI(
                                                     "Basic NPI (same in all age groups)" = "basic",
                                                     "Detailed NPI definition" = "detailed")),
                         uiOutput("add_npi_ui")),
-                 column(width = 7,
+                 column(width=2,
+                        h3("PI settings"),
+                        radioButtons("add_pi_toggle", "",
+                                     choices = list("No intervention" = "no",
+                                                                     "Basic prophylaxis" = "basic_pro",
+                                                                     "Basic active treatment" = "basic_at",
+                                                                     "Detailed prophylaxis definition" = "detailed_pro")),
+                        uiOutput("add_pi_ui")),
+                 column(width = 5,
                         h3("Simulation output"),
                         flowLayout(
                           selectInput("panel1_output_selector", 
@@ -33,12 +41,9 @@ ui <- shinyUI(
                                                                           "Percentages" = "pct")),
                           checkboxInput("panel1_dnmerge_groups", "Show individual age groups?", value = TRUE)),
                         plotOutput('panel1_plot'),
-                        # NPIs
-                        # PIs
-                        fluidRow(checkboxInput("add_pi_toggle", "Apply prophylaxis?", value = TRUE),
-                                 uiOutput("add_pi_ui"))) 
-               )
-      ),
+                        
+                 )
+               )),
       tabPanel("Model description",
                includeHTML("doc/model_description.html")),
       tabPanel("Detailed inputs",

@@ -8,7 +8,7 @@
 
 library(deSolve)
 
-sir_ode <- function(times,init,parms){
+seir_ode <- function(times,init,parms){
   with(as.list(c(parms)), {
     
     S    <- init[1];
@@ -27,7 +27,7 @@ sir_ode <- function(times,init,parms){
   })
 }
 
-sir_ode_ages <- function(times,init,parms){
+seir_ode_ages <- function(times,init,parms){
   with(as.list(c(parms)), {
     ll <- vector(length = length(init))
     for(k in 1:Ngroups){
@@ -54,8 +54,7 @@ sir_ode_ages <- function(times,init,parms){
     list(ll)
   })
 }
-# times <- seq(0,200,length.out=2001)
-# sir_out <- lsoda(init,times,sir_ode,parms)
+
 
 
 run_covid_desolve <- function(times = 1:100, 
@@ -67,6 +66,6 @@ run_covid_desolve <- function(times = 1:100,
   
   # With age groups:
   parms$N_c <- 7
-  lsoda(y0,times,sir_ode_ages,parms)
+  lsoda(y0,times,seir_ode_ages,parms)
   
 }

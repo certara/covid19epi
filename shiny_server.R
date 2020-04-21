@@ -3,14 +3,14 @@ server <- shinyServer(function(input, output, session) {
   # dynamically customisable
   inputs_to_manipulate <- list(
     list("sliderInput", list("r0", label = "r0 (approximate)", 
-                             min = 0.1, max = 4, value = 2.4, step = .1)),
+                             min = 0.1, max = 4, value = default_seir_parameters$r0, step = .1)),
     list("selectInput", 
          list("country", label = "Social mixing patterns", 
               choices = c("All countries (recommended)", levels(polymod$participants$country)))),
     list("sliderInput", list("inv_gamma1", label = "Length of incubation period", 
-                             min = 1, max = 14, step = 0.1, value = 5.1)),
+                             min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma1)),
     list("sliderInput", list("inv_gamma2", label = "Length of infectious period", 
-                             min = 1, max = 14, step = 0.1, value = 6.5)))
+                             min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma2_i1)))
   
   output$panel1_settings <- renderUI({
     lapply(inputs_to_manipulate, function(x) {
@@ -38,9 +38,9 @@ server <- shinyServer(function(input, output, session) {
     if(!is.null(input$add_npi_toggle)){
       if(input$add_npi_toggle == "basic"){
         if(!is.null(input$add_intervention_prop) && !is.null(input$add_intervention_scaling))
-          pars <- add_one_int(pars, 
-                              prop = input$add_intervention_prop/100, 
-                              scaling_const = 1 - input$add_intervention_scaling/100)
+          pars <- add_npi(pars, 
+                          prop = input$add_intervention_prop/100, 
+                          scaling_const = 1 - input$add_intervention_scaling/100)
       }
       
       if(input$add_npi_toggle == "detailed"){
@@ -54,9 +54,9 @@ server <- shinyServer(function(input, output, session) {
             scale[i] <- input[[paste0("add_npi_scale",  i)]]
           }
         }
-        pars <- add_one_int(pars, 
-                            prop = prop/100, 
-                            scaling_const = 1 - scale/100)
+        pars <- add_npi(pars, 
+                        prop = prop/100, 
+                        scaling_const = 1 - scale/100)
       }
     }
     pars
@@ -120,15 +120,40 @@ server <- shinyServer(function(input, output, session) {
     
   })
   output$add_pi_ui <- renderUI({
-    if(!is.null(input$add_pi_toggle))
-      if(input$add_pi_toggle){
-        pars <- seir_pars_nonpi()
-        ll <- lapply(as.list(pars$group_names), function(x) {
-          sliderInput(paste0("add_pi_", which(pars$group_names == x)), label = x, min = 0, max = 1, value = 0)
-        })
-        return(do.call(flowLayout, ll))
-      }
-    return(NULL)
+    if(input$add_pi_toggle == "detailed_pro"){
+      pars <- seir_pars_nonpi()
+      ll <- lapply(as.list(pars$group_names), function(x) {
+        sliderInput(paste0("add_pi_", which(pars$group_names == x)), label = x, min = 0, max = 1, value = 0)
+      })
+      return(do.call(flowLayout, ll))
+    }
+    
+    if(input$add_pi_toggle == "basic_pro")
+      return(list(
+        sliderInput("add_pro_use_key", "% of NPI ('key workers') treated",
+                    min = 0, max = 100, value = 5),
+        sliderInput("add_pro_use_nonkey", "% of non-NPI population treated",
+                    min = 0, max = 100, value = 0),
+        HTML("<i>If no NPI is used, we assume that all population is 'non-key'</i>"),
+        sliderInput("add_pro_length", "Average length of immunity (weeks)", 
+                    min = 0, max = 52, value = 5, step = 1),
+        sliderInput("add_pro_efficacy", "Efficacy (% effectively immunised)", 
+                    min = 0, max = 100, value = 50)
+      ))
+    
+    if(input$add_pi_toggle == "basic_at")
+      return(list(
+        sliderInput("add_at_use_key", "% of NPI ('key workers') treated",
+                    min = 0, max = 100, value = 5),
+        sliderInput("add_at_use_nonkey", "% of non-NPI population treated",
+                    min = 0, max = 100, value = 0),
+        HTML("<i>If no NPI is used, we assume that all population is 'non-key'</i>"),
+        sliderInput("add_at_gamma", "Average duration of illness in treated", 
+                    min = 0, max = 52, value = 5, step = 1),
+      ))
+    
+    if(input$add_pi_toggle == "no")
+      return(NULL)
   })
   
 })

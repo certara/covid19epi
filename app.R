@@ -35,10 +35,14 @@ convert_settings_to_par <- function(settings, pars) {
                                          countries = settings$country,
                                          age.limits = c(0, 10, 20, 30, 40, 50, 60, 70, 80))$matrix
   
-    # Initially infected proportion
+  # Initially infected proportion
   if(!is.null(settings$initial_infected_prop)){
     pars[["initial_infected_prop"]] <- as.numeric(settings$initial_infected_prop)
   }
+  
+  
+  pars[["r0"]] <- NULL
+  
   # Other settings which do not need conversion:
   # ... for now this is empty 
     
