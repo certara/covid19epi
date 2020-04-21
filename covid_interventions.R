@@ -12,7 +12,7 @@
 # Some proportion without intervention
 # Some proportion with intervention
 
-add_one_int <- function(params, prop = 0, scaling_const = 1){
+add_npi <- function(params, prop = 0, scaling_const = 1){
   Nint <- 2
   new_int <- params
   Ngroups <- params$Ngroups
@@ -44,3 +44,12 @@ add_one_int <- function(params, prop = 0, scaling_const = 1){
 }
 # ww <- do.call(run_covid_simulation, add_one_int())
 # plot_rcs(ww, "D", start_date = "2020-01-01", end_date = "2020-05-01")
+
+
+
+# Adding pharmaceutical interventions -----
+
+add_prophylaxis_fixed <- function(params, prop, efficacy) {
+  params$prop
+}
+

@@ -10,7 +10,9 @@ server <- shinyServer(function(input, output, session) {
     list("sliderInput", list("inv_gamma1", label = "Length of incubation period", 
                              min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma1)),
     list("sliderInput", list("inv_gamma2", label = "Length of infectious period", 
-                             min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma2_i1)))
+                             min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma2_i1)),
+    list("sliderInput", list("p_as", label = "Proportion asymptomatic", 
+                             min = 0, max = 1, step = 0.01, value = 0.25)))
   
   output$panel1_settings <- renderUI({
     lapply(inputs_to_manipulate, function(x) {

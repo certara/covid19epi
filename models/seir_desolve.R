@@ -34,28 +34,28 @@ seir_ode_ages <- function(times,init,parms){
       # j <- (k-1)*7
       i <- (k-1)*N_c
       S    <- init[i+1];
-      E    <- init[i+2]; I1 <- init[i+3];
-      I2   <- init[i+4]; I3 <- init[i+5];
-      D    <- init[i+6]; R  <- init[i+7];
+      E    <- init[i+2]; As <- init[i+3]; 
+      I1   <- init[i+4]; I2   <- init[i+5]; I3 <- init[i+6];
+      D    <- init[i+7]; R  <- init[i+8];
+      Im   <- init[i+9]
       
       force <- 0
       for(j in 1:Ngroups)
-        force <- force + q[k] * contacts[k,j] * (init[N_c*(j-1) + 3] + init[N_c*(j-1) + 4] + init[N_c*(j-1) + 5])
-      
-      
-      ll[i + 1]  <- -force*S
+        force <- force + q[k] * contacts[k,j] * (init[N_c*(j-1) + 3] + init[N_c*(j-1) + 4] + init[N_c*(j-1) + 5] + init[N_c*(j-1) + 6])
+      ll[i + 1]  <- -force*S + kappa[k]*Im -delta[k]*Im
       ll[i + 2]  <- force*S - gamma1[k]*E
-      ll[i + 3]  <- gamma1[k]*E - gamma2_i1[k]*I1
-      ll[i + 4]  <- gamma2_i1[k]*I1*p_hosp[k] - gamma2_i2[k]*I2
-      ll[i + 5]  <- gamma2_i2[k]*I2*p_severe[k]  - gamma2_i3[k]*I3
-      ll[i + 6]  <- gamma2_i3[k]*I3*p_death[k]
-      ll[i + 7]  <- gamma2_i3[k]*I3*(1-p_death[k]) + gamma2_i1[k]*I1*(1-p_hosp[k]) + gamma2_i2[k]*I2*(1-p_severe[k])
+      ll[i + 3]  <- gamma1[k]*E*p_as[k] - gamma2_i1[k]*As
+      ll[i + 4]  <- gamma1[k]*E*(1-p_as[k]) - gamma2_i1[k]*I1
+      ll[i + 5]  <- gamma2_i1[k]*I1*p_hosp[k] - gamma2_i2[k]*I2
+      ll[i + 6]  <- gamma2_i2[k]*I2*p_severe[k]  - gamma2_i3[k]*I3
+      ll[i + 7]  <- gamma2_i3[k]*I3*p_death[k]
+      ll[i + 8]  <- gamma2_i3[k]*I3*(1-p_death[k]) + gamma2_i1[k]*I1*(1-p_hosp[k]) + gamma2_i2[k]*I2*(1-p_severe[k]) +
+                    gamma2_i1[k]*As
+      ll[i + 9]  <- -kappa[k]*Im
     }
     list(ll)
   })
 }
-
-
 
 run_covid_desolve <- function(times = 1:100, 
                               y0, 
@@ -65,7 +65,5 @@ run_covid_desolve <- function(times = 1:100,
   # lsoda(y0,times,sir_ode,parms)
   
   # With age groups:
-  parms$N_c <- 7
   lsoda(y0,times,seir_ode_ages,parms)
-  
 }

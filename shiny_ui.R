@@ -34,7 +34,7 @@ ui <- shinyUI(
                         h3("Simulation output"),
                         flowLayout(
                           selectInput("panel1_output_selector", 
-                                      "Display...", c(compartment_names), selected = "I3"),
+                                      "Display...", c(compartment_names), selected = "I1"),
                           sliderInput("panel1_xlim", label = "Days to display", value=150, min=14, max=300),
                           selectInput("panel1_scaling", "Y axis shows", c("Absolute numbers" = "absolute", 
                                                                           "Numbers per 100,000" = "per100k",

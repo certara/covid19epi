@@ -14,6 +14,7 @@ source("models/seir_desolve.R")
 run_covid_simulation <- function(method = "desolve", 
                                  Nweeks = 52,
                                  Ngroups = 9,
+                                 y0 = NULL,
                                  contacts = matrix(13.5/Ngroups, Ngroups, Ngroups),
                                  contacts_scaling = matrix(1, Ngroups, Nweeks),
                                  group_names = paste("Group", 1:Ngroups),
@@ -25,28 +26,35 @@ run_covid_simulation <- function(method = "desolve",
                                  gamma2_i1 = rep(1/6.5, Ngroups), 
                                  gamma2_i2 = rep(1/6.5, Ngroups), 
                                  gamma2_i3 = rep(1/6.5, Ngroups),
+                                 kappa     = rep(0, Ngroups), delta = rep(0, Ngroups),
+                                 p_as     = rep(0, Ngroups),
                                  p_severe = rep(0, Ngroups),
-                                 p_hosp = rep(0, Ngroups),
-                                 p_death = rep(0, Ngroups)) {
-  Ncompartments <- 7
+                                 p_hosp   = rep(0, Ngroups),
+                                 p_death  = rep(0, Ngroups)) {
+  N_c <- 9 #number of compartments
   times <- c(1, seq(2, Nweeks*7, 2))
   
   # Initial state:
-  y0 <- matrix(0, Ncompartments, Ngroups)
-  y0[1,] <- rep(1,Ngroups) - initial_infected_prop
-  y0[2,] <- initial_infected_prop
+  if(is.null(y0)){
+    y0 <- matrix(0, N_c, Ngroups)
+    y0[1,] <- rep(1,Ngroups) - initial_infected_prop
+    y0[2,] <- initial_infected_prop
+  }
   
   if(method == "desolve") {
     # beta <- q
-    parms <- listN(q, gamma1, gamma2_i1, gamma2_i2, gamma2_i3, p_severe, p_hosp, p_death, contacts, Ngroups)
+    parms <- listN(q, gamma1, gamma2_i1, gamma2_i2, gamma2_i3, kappa, delta,
+                   p_as, p_severe, p_hosp, p_death, contacts, Ngroups, N_c)
     y <- run_covid_desolve(times, y0 = c(y0), parms = parms)
     times_ode <- y[,"time"]
     y <- y[,-1] #remove time column!
-    y <- array(y, dim = c(length(times_ode), Ncompartments, Ngroups),
+    y <- array(y, dim = c(length(times_ode), N_c, Ngroups),
                dimnames = list(times_ode, compartment_names, group_names))
     # dimnames(y) <- list(times_ode, compartment_names, group_names)
     return(y)
   } else if(method == "stan"){
+    # This is now outdated.
+    
     # Set up for Stan:
     stan_inputs <- list(
       N_t = length(times), N_groups = Ngroups, N_weeks = Nweeks, #=0 because for now we omit vaccination_rates
@@ -59,7 +67,7 @@ run_covid_simulation <- function(method = "desolve",
     fit <- rstan::sampling(covid_model, data=stan_inputs, algorithm = "Fixed_param", iter=1, chains=1, refresh=0)
     y <- rstan::extract(fit, "y")[[1]]
     # Extract outputs:
-    y <- array(y, dim = c(dim(y)[1], dim(y)[2], Ncompartments, Ngroups),
+    y <- array(y, dim = c(dim(y)[1], dim(y)[2], N_c, Ngroups),
                dimnames = list(1:dim(y)[1], times, compartment_names, group_names))
     return(y[1,,,])
   }
@@ -81,7 +89,7 @@ plot_rcs <- function(y, compartment = "R", shade_weeks = c(0,0),
     rownames_to_column("time") %>%
     mutate(time = as.numeric(time)) %>%
     gather(age_group, prevalence, -time)
-    
+  
   if(!is.null(start_date))
     gg_data$time <- as.Date(gg_data$time, origin = start_date)
   

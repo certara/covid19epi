@@ -2,19 +2,6 @@ library(tidyverse)
 theme_set(theme_minimal())
 # source("vaccination_rates.R")
 
-# Basic inputs -----
-# LENGTH OF SIMULATION
-months <- c(month.abb[7:12], month.abb[1:5])
-
-# Demographics:
-# usa_dem_table <- readRDS("transformed_inputs/usa_dem.rds")
-# usa_dem <- usa_dem_table %>%
-#   mutate(age_gr = cut(age, age_groups, right = FALSE)) %>%
-#   group_by(age_gr) %>%
-#   # group_by(age_gr, sex) %>%
-#   summarise(n = sum(value))
-# usa_dem <- setNames(usa_dem$n, usa_dem$age_gr)
-
 # Social mixing -----
 # poly_contacts <- readRDS("transformed_inputs/poly_contacts.rds")
 # poly_contacts_weighted <- readRDS("transformed_inputs/poly_contacts_weighted.rds")
@@ -31,11 +18,10 @@ Ngroups <- length(age_group_names)
 
 
 # Configure names of SEIR compartments -----
-compartment_names <- c("S", "E", "I1", "I2", "I3", "D", "R")
-names(compartment_names) <- c("Susceptible", "Exposed", "Infected (mild symptoms)", 
-                              "Infected (sever symptoms)", "Critical care", "Deaths (cumulative)", "Recovered")
-
-
+compartment_names <- c("S", "E", "As", "I1", "I2", "I3", "D", "R", "Im")
+names(compartment_names) <- c("Susceptible", "Exposed", "Asymptomatic", "Infected (mild symptoms)", 
+                              "Infected (sever symptoms)", "Critical care", 
+                              "Deaths (cumulative)", "Recovered", "Immunised")
 
 
 # Hospitalisation and death risk (Ferguson et al) -----
@@ -62,6 +48,9 @@ default_seir_parameters <- list(
   gamma2_i1 = rep(1/6.5, Ngroups), 
   gamma2_i2 = rep(1/6.5, Ngroups), 
   gamma2_i3 = rep(1/6.5, Ngroups),
+  delta     = rep(0, Ngroups),
+  kappa     = rep(0, Ngroups),
+  p_as      = rep(0.25, Ngroups),
   p_severe  = i1_to_i2,
   p_hosp    = i2_to_i3,
   p_death   = i3_to_d,

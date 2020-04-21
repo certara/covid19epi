@@ -24,6 +24,9 @@ convert_settings_to_par <- function(settings, pars) {
   if(!is.null(settings$inv_gamma2))
     pars[["gamma2_i1"]] <- rep(1/settings$inv_gamma2, Ngroups)
   
+  if(!is.null(settings$p_as))
+    pars[["p_as"]] <- rep(settings$p_as, Ngroups)
+  
   # R0 = q*avg_contacts*gamma2
   if(!is.null(settings$r0))  
     pars[["q"]] <- settings$r0/(13.5*(1/pars[["gamma2_i1"]]))
