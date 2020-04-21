@@ -164,4 +164,10 @@ server <- shinyServer(function(input, output, session) {
       return(NULL)
   })
   
+  output$plot_demographics <- renderPlot({
+    N <- pbc_spread[input$demographics,]/1e06
+    ggplot(gather(N), aes(x=key, y=value)) + geom_bar(fill = "cornflowerblue", stat = "identity") + labs(x="", y="N (million)")
+    
+  })
+  
 })

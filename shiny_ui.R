@@ -7,9 +7,9 @@ ui <- shinyUI(
                fluidRow(
                  column(
                    h3("Simulation settings"),
-                   selectInput("scenario", label = "Choose scenario", 
-                               choices = c("Generic" = "generic", 
-                                           "United States" = "us", "United Kingdom" = "uk")),
+                   selectInput("demographics", label = "Choose country (demographics)", 
+                               choices = c(countries), selected = "826"),
+                   plotOutput("plot_demographics", height = "200px"),
                    uiOutput('panel1_settings'),
                    checkboxInput('set_starting_toggle', "Set starting proportions?", value = FALSE),
                    uiOutput('set_starting_ui'),
