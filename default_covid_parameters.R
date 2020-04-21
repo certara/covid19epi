@@ -53,7 +53,7 @@ ifr      <- c(0.002, 0.006, 0.03, 0.08, 0.15, 0.60, 2.2, 5.1, 9.3)/100
 
 # Default values -----
 default_seir_parameters <- list(
-  Ngroups = 9, Nweeks = 26,
+  Ngroups = 9, Nweeks = 52,
   group_names = age_group_names,
   contacts = default_cm, 
   q = rep(2.2/(avg_contacts_number*6.5), Ngroups), #R0 (2.4) = contacts (13.48) * average length (6.5) * q

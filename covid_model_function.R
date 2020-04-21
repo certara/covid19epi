@@ -12,7 +12,7 @@ source("models/seir_desolve.R")
 
 # Setting up parameters for the models:
 run_covid_simulation <- function(method = "desolve", 
-                                 Nweeks = 26,
+                                 Nweeks = 52,
                                  Ngroups = 9,
                                  contacts = matrix(13.5/Ngroups, Ngroups, Ngroups),
                                  contacts_scaling = matrix(1, Ngroups, Nweeks),
@@ -20,11 +20,11 @@ run_covid_simulation <- function(method = "desolve",
                                  initial_infected_prop = 2e-07,
                                  vaccination_rates = NA, #for now ignored
                                  # arguments that will be packed into theta
-                                 q = rep(.011, Ngroups), 
+                                 q = rep(2.2/(13.5*6.5), Ngroups), 
                                  gamma1 = rep(1/5, Ngroups), 
-                                 gamma2_i1 = rep(1/5, Ngroups), 
-                                 gamma2_i2 = rep(1/5, Ngroups), 
-                                 gamma2_i3 = rep(1/5, Ngroups),
+                                 gamma2_i1 = rep(1/6.5, Ngroups), 
+                                 gamma2_i2 = rep(1/6.5, Ngroups), 
+                                 gamma2_i3 = rep(1/6.5, Ngroups),
                                  p_severe = rep(0, Ngroups),
                                  p_hosp = rep(0, Ngroups),
                                  p_death = rep(0, Ngroups)) {
@@ -38,7 +38,7 @@ run_covid_simulation <- function(method = "desolve",
   
   if(method == "desolve") {
     # beta <- q
-    parms <- listN(q, gamma1, gamma2_i1, gamma2_i2, gamma2_i3, p_severe, p_hosp, p_death, contacts)
+    parms <- listN(q, gamma1, gamma2_i1, gamma2_i2, gamma2_i3, p_severe, p_hosp, p_death, contacts, Ngroups)
     y <- run_covid_desolve(times, y0 = c(y0), parms = parms)
     times_ode <- y[,"time"]
     y <- y[,-1] #remove time column!
@@ -65,8 +65,14 @@ run_covid_simulation <- function(method = "desolve",
   }
 }
 
-rescale_rcs <- function(y, pop_sizes) {
-  y*rep(pop_sizes, each = dim(y)[1]*dim(y)[2])
+# Y is a 3D matrix, with times x compartments x groups
+# we can rescale each group by a vector pop_sizes (of length N groups)
+# we can then also merge all groups into one
+rescale_rcs <- function(y, pop_sizes=rep(1, dim(y)[3]), merge = FALSE) {
+  y_new <- y*rep(pop_sizes, each = dim(y)[1]*dim(y)[2])
+  if(merge)
+    y_new <- replicate(1, apply(y, c(1,2), sum))
+  y_new
 }
 
 plot_rcs <- function(y, compartment = "R", shade_weeks = c(0,0), 
@@ -75,7 +81,7 @@ plot_rcs <- function(y, compartment = "R", shade_weeks = c(0,0),
     rownames_to_column("time") %>%
     mutate(time = as.numeric(time)) %>%
     gather(age_group, prevalence, -time)
-  
+    
   if(!is.null(start_date))
     gg_data$time <- as.Date(gg_data$time, origin = start_date)
   
@@ -86,6 +92,7 @@ plot_rcs <- function(y, compartment = "R", shade_weeks = c(0,0),
     geom_line(aes(x=time, y=prevalence, group=age_group, color=age_group)) +
     {if(!is.null(start_date)) scale_x_date(limits = c(as.Date(start_date), as.Date(end_date)))} +
     labs(y = compartment) +
+    {if(dim(y)[3] == 1) theme(legend.position = "none")} +
     scale_color_viridis_d()
 }
 

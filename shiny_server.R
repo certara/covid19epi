@@ -18,6 +18,16 @@ server <- shinyServer(function(input, output, session) {
     })
   })
   
+  output$set_starting_ui <- renderUI({
+    if(input$set_starting_toggle == 0)
+      return(selectInput("initial_infected_prop", label = "Initial infected proportion",
+                         choices = c("One in million" = 1e-06, "Five per million" = 5e-06,
+                                     "One per 100,000" = 1e-05, "One per 10,000" = 1e-04,
+                                     "One per 1,000" = 1e-03)))
+    if(input$set_starting_toggle == 1)
+      return(NULL)
+  })
+  
   seir_pars_no_i <- reactive({
     convert_settings_to_par(input, default_seir_parameters)
   })
@@ -52,6 +62,9 @@ server <- shinyServer(function(input, output, session) {
     pars
   })
   
+  pop_size <-reactive({
+    return(1)
+  })
   
   seir_model <- reactive({
     if(is.null(seir_pars_nonpi()))
@@ -66,7 +79,15 @@ server <- shinyServer(function(input, output, session) {
     if(is.null(seir_model()))
       return(NULL)
     
-    plot_rcs(seir_model(), input$panel1_output_selector, 
+    y <- seir_model()
+    
+    scale <- ifelse(input$panel1_scaling != "pct",
+                    ifelse(input$panel1_scaling == "per100k", 
+                           rep(100000, dim(y)[3]),
+                           pop_size()), rep(1, dim(y)[3]))
+    y <- rescale_rcs(y, merge = !input$panel1_dnmerge_groups, pop_sizes = scale)
+    
+    plot_rcs(y, input$panel1_output_selector, 
              start_date = input$start_date, end_date = input$start_date + input$panel1_xlim)
   })
   
@@ -109,4 +130,5 @@ server <- shinyServer(function(input, output, session) {
       }
     return(NULL)
   })
+  
 })

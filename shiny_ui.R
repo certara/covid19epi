@@ -11,7 +11,8 @@ ui <- shinyUI(
                                choices = c("Generic" = "generic", 
                                            "United States" = "us", "United Kingdom" = "uk")),
                    uiOutput('panel1_settings'),
-                   checkboxInput('set_starting_prop', "Set starting proportions?", value = FALSE),
+                   checkboxInput('set_starting_toggle', "Set starting proportions?", value = FALSE),
+                   uiOutput('set_starting_ui'),
                    dateInput('start_date', label = "Date of epidemic start", value = "2020-02-01"),
                    width=2),
                  column(width=2,
@@ -26,7 +27,11 @@ ui <- shinyUI(
                         flowLayout(
                           selectInput("panel1_output_selector", 
                                       "Display...", c(compartment_names), selected = "I3"),
-                          sliderInput("panel1_xlim", label = "Days to display", value=150, min=14, max=300)),
+                          sliderInput("panel1_xlim", label = "Days to display", value=150, min=14, max=300),
+                          selectInput("panel1_scaling", "Y axis shows", c("Absolute numbers" = "absolute", 
+                                                                          "Numbers per 100,000" = "per100k",
+                                                                          "Percentages" = "pct")),
+                          checkboxInput("panel1_dnmerge_groups", "Show individual age groups?", value = TRUE)),
                         plotOutput('panel1_plot'),
                         # NPIs
                         # PIs
@@ -35,9 +40,9 @@ ui <- shinyUI(
                )
       ),
       tabPanel("Model description",
-               includeHTML("doc/model_description.html"))
-      # tabPanel("Model parameters")
-      #          # includeHTML("doc/"))
+               includeHTML("doc/model_description.html")),
+      tabPanel("Detailed inputs",
+               h3("To be filled in."))
     )
   )
 )

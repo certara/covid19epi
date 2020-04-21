@@ -9,7 +9,13 @@
 library(deSolve)
 
 sir_ode <- function(times,init,parms){
-  with(as.list(c(parms,init)), {
+  with(as.list(c(parms)), {
+    
+    S    <- init[1];
+    E    <- init[2]; I1 <- init[3];
+    I2   <- init[4]; I3 <- init[5];
+    D    <- init[6]; R  <- init[7];
+    
     dS  <- -beta*S*I1
     dE  <- beta*S*I1 - gamma1*E
     dI1 <- gamma1*E - gamma2_i1*I1
@@ -17,7 +23,7 @@ sir_ode <- function(times,init,parms){
     dI3 <- gamma2_i2*I2*p_severe  - gamma2_i3*I3
     dR  <- gamma2_i3*I3*(1-p_death) + gamma2_i1*I1*(1-p_hosp) + gamma2_i2*I2*(1-p_severe)
     dD  <- gamma2_i3*I3*p_death
-    list(c(dS,dE, dI1,dI2, dI3, dR, dD))
+    list(c(dS,dE, dI1,dI2, dI3, dD, dR))
   })
 }
 
@@ -34,7 +40,8 @@ sir_ode_ages <- function(times,init,parms){
       
       force <- 0
       for(j in 1:Ngroups)
-        force <- force + q[k] * contacts[j,k] * (init[N_c*(j-1) + 3] + init[N_c*(j-1) + 4] + init[N_c*(j-1) + 5])
+        force <- force + q[k] * contacts[k,j] * (init[N_c*(j-1) + 3] + init[N_c*(j-1) + 4] + init[N_c*(j-1) + 5])
+      
       
       ll[i + 1]  <- -force*S
       ll[i + 2]  <- force*S - gamma1[k]*E
@@ -52,18 +59,14 @@ sir_ode_ages <- function(times,init,parms){
 
 
 run_covid_desolve <- function(times = 1:100, 
-                              y0 = c(S=1, E=1e-06, I1=0, I2=0, I3=0, R=0, D=0), 
+                              y0, 
                               parms) {
   # Without age groups:
   # parms <- lapply(parms, function(x) if(length(x) > 1) x <- x[1])
   # lsoda(y0,times,sir_ode,parms)
   
   # With age groups:
-  parms$Ngroups <- 9
   parms$N_c <- 7
-  # y0_long <- y0
-  # for(i in 1:8)
-    # y0_long <- append(y0_long, y0)
   lsoda(y0,times,sir_ode_ages,parms)
   
 }
