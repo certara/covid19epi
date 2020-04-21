@@ -2,13 +2,14 @@ library(tidyverse)
 theme_set(theme_minimal())
 # source("vaccination_rates.R")
 
+load("transformed_data/demo_inputs.Rdata")
+
 # Social mixing -----
 # poly_contacts <- readRDS("transformed_inputs/poly_contacts.rds")
 # poly_contacts_weighted <- readRDS("transformed_inputs/poly_contacts_weighted.rds")
 # contact_matrix(polymod, countries="United Kingdom", age.limits = age_group_breaks, 
 #                missing.participant.age = "keep", missing.contact.age = "keep")
-library(socialmixr)
-default_cm <- contact_matrix(polymod, age.limits = c(0, 10, 20, 30, 40, 50, 60, 70, 80))$matrix
+# THIS IS NOW LOADED FROM DATA PREPARATION SCRIPT
 # avg_contacts_number <- contact_matrix(polymod, age.limits = c(0), quiet = TRUE)$matrix[1,1]
 avg_contacts_number <- 13.5
 
