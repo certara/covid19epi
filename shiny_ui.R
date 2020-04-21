@@ -40,7 +40,7 @@ ui <- shinyUI(
                                                                           "Numbers per 100,000" = "per100k",
                                                                           "Percentages" = "pct")),
                           checkboxInput("panel1_dnmerge_groups", "Show individual age groups?", value = TRUE)),
-                        plotOutput('panel1_plot'),
+                        plotOutput('panel1_plot')
                         
                  )
                )),
