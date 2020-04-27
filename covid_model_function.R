@@ -39,8 +39,10 @@ run_covid_simulation <- function(method = "desolve",
   
   # Initial state:
   if(is.null(y0)){
-    if(sum(N) != 1)
-      warning("starting N's should sum to 1")
+    # if(sum(N) != 1 && normaliseN){
+    #   warning("normalised N's to sum to 1")
+    #   N <- N/sum(N)
+    # }
     y0 <- matrix(rep(N, Ngroups), N_c, Ngroups)
   }
   
@@ -82,7 +84,7 @@ run_covid_simulation <- function(method = "desolve",
 rescale_rcs <- function(y, pop_sizes=rep(1, dim(y)[3]), merge = FALSE) {
   y_new <- y*rep(pop_sizes, each = dim(y)[1]*dim(y)[2])
   if(merge)
-    y_new <- replicate(1, apply(y, c(1,2), sum))
+    y_new <- replicate(1, apply(y_new, c(1,2), sum))
   y_new
 }
 

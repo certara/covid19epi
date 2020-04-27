@@ -8,6 +8,7 @@
 library(shiny)
 library(rstan)
 library(devtools)
+library(scales)
 # install_github("wwiecek/stanseir")
 
 # set-up code -----

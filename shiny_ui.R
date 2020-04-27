@@ -38,7 +38,7 @@ ui <- shinyUI(
                           sliderInput("panel1_xlim", label = "Days to display", value=150, min=14, max=300),
                           selectInput("panel1_scaling", "Y axis shows", c("Absolute numbers" = "absolute", 
                                                                           "Numbers per 100,000" = "per100k",
-                                                                          "Percentages" = "pct")),
+                                                                          "Percentages" = "pct"), selected = "absolute"),
                           checkboxInput("panel1_dnmerge_groups", "Show individual age groups?", value = TRUE)),
                         plotOutput('panel1_plot')
                         

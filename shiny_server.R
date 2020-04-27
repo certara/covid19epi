@@ -69,11 +69,6 @@ server <- shinyServer(function(input, output, session) {
   })
   
   
-  pop_size <- reactive({
-    return(1)
-  })
-  
-  
   seir_model <- reactive({
     if(is.null(seir_pars_nonpi()))
       return(NULL)
@@ -104,14 +99,37 @@ server <- shinyServer(function(input, output, session) {
     
     y <- seir_model()
     
-    scale <- ifelse(input$panel1_scaling != "pct",
-                    ifelse(input$panel1_scaling == "per100k", 
-                           rep(100000, dim(y)[3]),
-                           pop_size()), rep(1, dim(y)[3]))
+    scale <- as.numeric(pbc_spread[input$demographics,])
+    if(input$panel1_scaling == "pct"){
+      if(input$panel1_dnmerge_groups)
+        scale <- rep(1, dim(y)[3]) #everything is just treated as 1
+      else
+        scale <- scale/sum(scale) #normalise the distribution over age groups
+    }
+    if(input$panel1_scaling == "per100k"){
+      
+      if(input$panel1_dnmerge_groups)
+        scale <- rep(100000, dim(y)[3]) #everything is just treated as 1
+      else
+        scale <- 100000*scale/sum(scale) #normalise the distribution over age groups
+    }
+    
+    if(!is.null(input$add_intervention_prop) && input$add_npi_toggle == "basic"){
+      pr <- input$add_intervention_prop/100
+      scale <- c((1-pr)*scale, (pr)*scale)
+    }
+    
     y <- rescale_rcs(y, merge = !input$panel1_dnmerge_groups, pop_sizes = scale)
     
-    plot_rcs(y, input$panel1_output_selector, 
-             start_date = input$start_date, end_date = input$start_date + input$panel1_xlim)
+    gg <- plot_rcs(y, input$panel1_output_selector, 
+             start_date = input$start_date, end_date = input$start_date + input$panel1_xlim) 
+    
+    if(input$panel1_scaling == "pct")
+      gg <- gg + scale_y_continuous(label = scales::label_percent())
+    else
+      gg <- gg + scale_y_continuous(label = scales::label_number_si())
+    
+    gg
   })
   
   
@@ -185,8 +203,8 @@ server <- shinyServer(function(input, output, session) {
   
   output$plot_demographics <- renderPlot({
     N <- pbc_spread[input$demographics,]/1e06
-    ggplot(gather(N), aes(x=key, y=value)) + geom_bar(fill = "cornflowerblue", stat = "identity") + labs(x="", y="N (million)")
-    
+    ggplot(gather(N), aes(x=key, y=value)) + 
+      geom_bar(fill = "cornflowerblue", stat = "identity") + 
+      labs(x="", y="N (million)")
   })
-  
 })
