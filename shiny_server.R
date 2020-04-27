@@ -7,12 +7,12 @@ server <- shinyServer(function(input, output, session) {
     # list("selectInput", 
     # list("country", label = "Social mixing patterns", 
     # choices = c("All countries (recommended)", levels(polymod$participants$country)))),
-    list("sliderInput", list("inv_gamma1", label = "Length of incubation period", 
+    list("sliderInput", list("inv_gamma1", label = "Length of latent period", 
                              min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma1)),
-    list("sliderInput", list("inv_gamma2", label = "Length of infectious period", 
+    list("sliderInput", list("inv_gamma2", label = "Length of symptoms period", 
                              min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma2_i1)),
     list("sliderInput", list("p_as", label = "Proportion asymptomatic", 
-                             min = 0, max = 1, step = 0.01, value = 0.25)))
+                             min = 0, max = 1, step = 0.01, value = mean(default_seir_parameters$p_as))))
   
   output$panel1_settings <- renderUI({
     lapply(inputs_to_manipulate, function(x) {

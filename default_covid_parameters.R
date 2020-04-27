@@ -52,8 +52,8 @@ default_seir_parameters <- list(
   gamma2_i3 = rep(1/6.5, Ngroups),
   delta     = rep(0, Ngroups),
   kappa     = rep(0, Ngroups),
-  p_as      = rep(0.25, Ngroups),
-  p_severe  = i1_to_i2,
-  p_hosp    = i2_to_i3,
+  p_as      = rep(0.43, Ngroups),
+  p_hosp    = i1_to_i2/0.43, #correct for asymptomatic
+  p_severe  = i2_to_i3,
   p_death   = i3_to_d
 )

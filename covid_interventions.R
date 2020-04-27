@@ -12,14 +12,13 @@
 # Some proportion without intervention
 # Some proportion with intervention
 
-add_npi <- function(params, prop = 0, scaling_const = 1){
+add_npi <- function(params, prop = 0, scaling_const = 1, int_name = "intervention"){
   Nint <- 2
   new_int <- params
   Ngroups <- params$Ngroups
   
   if(is.null(Ngroups))
     stop("Need Ngroups to add interventions.")
-  # browser()
   if(length(prop) == 1)
     prop <- rep(prop, Ngroups)
   if(length(scaling_const) == 1)
@@ -35,13 +34,16 @@ add_npi <- function(params, prop = 0, scaling_const = 1){
   # scaling <- matrix(c(1, scaling_const), Nint, Ngroups)
   
   new_int$contacts <- rbind(
+    # Rescale contacts using prop object:
+    # cbind(new_int$contacts*split[1,]*scaling[1,], new_int$contacts*split[2,]*scaling[1,]),
+    # cbind(new_int$contacts*split[1,]*scaling[2,], new_int$contacts*split[2,]*scaling[2,]))
     cbind(new_int$contacts*split[1,]*scaling[1,], new_int$contacts*split[2,]*scaling[1,]),
     cbind(new_int$contacts*split[1,]*scaling[2,], new_int$contacts*split[2,]*scaling[2,]))
   new_int$Ngroups <- Nint*Ngroups
-  new_int$group_names <- c(paste(new_int$group_names, ", no intervention"),
-                           paste(new_int$group_names, ", with intervention"))
+  new_int$group_names <- c(paste(new_int$group_names, ", no", int_name),
+                           paste(new_int$group_names, ", with", int_name))
   # new_int$N           <- c(new_int$N*(1 - prop), new_int$N*prop)
-  new_int <- lapply(new_int, function(x) if(length(x) == 9) return(c(x,x)) else return(x))
+  new_int <- lapply(new_int, function(x) if(length(x) == Ngroups) return(c(x,x)) else return(x))
 }
 # ww <- do.call(run_covid_simulation, add_one_int())
 # plot_rcs(ww, "D", start_date = "2020-01-01", end_date = "2020-05-01")
