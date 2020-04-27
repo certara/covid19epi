@@ -4,9 +4,9 @@ server <- shinyServer(function(input, output, session) {
   inputs_to_manipulate <- list(
     list("sliderInput", list("r0", label = "r0 (approximate)", 
                              min = 0.1, max = 4, value = default_seir_parameters$r0, step = .1)),
-    list("selectInput", 
-         list("country", label = "Social mixing patterns", 
-              choices = c("All countries (recommended)", levels(polymod$participants$country)))),
+    # list("selectInput", 
+    # list("country", label = "Social mixing patterns", 
+    # choices = c("All countries (recommended)", levels(polymod$participants$country)))),
     list("sliderInput", list("inv_gamma1", label = "Length of incubation period", 
                              min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma1)),
     list("sliderInput", list("inv_gamma2", label = "Length of infectious period", 
@@ -53,7 +53,7 @@ server <- shinyServer(function(input, output, session) {
     }
     pars
   })
-
+  
   
   
   
@@ -79,6 +79,21 @@ server <- shinyServer(function(input, output, session) {
       return(NULL)
     
     pars <- seir_pars_nonpi()
+    
+    # Add pharmaceutical interventions
+    if(input$add_pi_toggle == "basic_pro"){
+      if(is.null(input$add_pro_efficacy) || is.null(input$add_pro_use) || is.null(input$add_pro_length))
+        return(NULL)
+      Im <- (input$add_pro_use/100)*(input$add_pro_efficacy/100)
+      if(length(pars$N) == 9){
+        pars$N <- (1-Im)*pars$N
+        pars$N[["Im"]] <- Im
+        pars$kappa <- rep(1/(input$add_pro_length*7), pars$Ngroups)
+      }
+      
+    }
+    
+    
     # pars$method <- "stan"
     do.call(run_covid_simulation, pars)
   })
@@ -98,6 +113,10 @@ server <- shinyServer(function(input, output, session) {
     plot_rcs(y, input$panel1_output_selector, 
              start_date = input$start_date, end_date = input$start_date + input$panel1_xlim)
   })
+  
+  
+  
+  # UI renders ------
   
   output$add_npi_ui <- renderUI({
     if(!is.null(input$add_npi_toggle)){
@@ -138,10 +157,10 @@ server <- shinyServer(function(input, output, session) {
     
     if(input$add_pi_toggle == "basic_pro")
       return(list(
-        sliderInput("add_pro_use_key", "% of NPI ('key workers') immunised",
+        sliderInput("add_pro_use", "% of population immunised",
                     min = 0, max = 100, value = 5),
-        sliderInput("add_pro_use_nonkey", "% of non-NPI population immunised",
-                    min = 0, max = 100, value = 0),
+        # sliderInput("add_pro_use_nonkey", "% of non-NPI population immunised",
+                    # min = 0, max = 100, value = 0),
         HTML("<i>If no NPI is used, we assume that all population is 'non-key'</i>"),
         sliderInput("add_pro_length", "Average length of immunity (weeks)", 
                     min = 0, max = 52, value = 5, step = 1),
