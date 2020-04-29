@@ -89,24 +89,35 @@ rescale_rcs <- function(y, pop_sizes=rep(1, dim(y)[3]), merge = FALSE) {
 }
 
 plot_rcs <- function(y, compartment = "R", shade_weeks = c(0,0), 
-                     start_date = NULL, end_date = start_date + 300,
-                     lab_type = "") {
+                     start_date = as.Date("01-01-2020", format="%d-%m-%Y"), 
+                     end_date = start_date + 300,
+                     lab_type = "", overlay_data = NULL) {
   gg_data <- as.data.frame(y[,compartment,]) %>%
     rownames_to_column("time") %>%
     mutate(time = as.numeric(time)) %>%
-    gather(age_group, prevalence, -time)
+    gather(age_group, value, -time)
   
   if(!is.null(start_date))
     gg_data$time <- as.Date(gg_data$time, origin = start_date)
   
-  ggplot(gg_data) + 
+  # Remove rows that we don't plot (to have the right Y scale)
+  gg_data <- gg_data[gg_data$time <= as.Date(end_date),]
+  
+  gg <- ggplot() + 
     # geom_rect(aes(xmin = as.Date(7*shade_weeks[1], origin = start_date), 
     # xmax = as.Date(7*shade_weeks[2], origin = start_date),
     # ymin=0, ymax=Inf), fill = "skyblue", alpha = .2) +
-    geom_line(aes(x=time, y=prevalence, group=age_group, color=age_group)) +
+    geom_line(data = gg_data, aes(x=time, y=value, group=age_group, color=age_group)) +
     {if(!is.null(start_date)) scale_x_date(limits = c(as.Date(start_date), as.Date(end_date)))} +
     labs(y = paste0(compartment_names[compartment], lab_type)) +
     {if(dim(y)[3] == 1) theme(legend.position = "none")} +
     scale_color_viridis_d()
+  
+  if(!is.null(overlay_data) && nrow(overlay_data) > 0){
+    # overlay_data$time <- as.Date(overlay_data$time, origin = start_date)
+    gg <- gg +
+      geom_point(aes(x=time, y=value), data = overlay_data)
+  }
+  gg
 }
 

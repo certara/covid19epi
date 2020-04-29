@@ -8,9 +8,9 @@ server <- shinyServer(function(input, output, session) {
     # list("country", label = "Social mixing patterns", 
     # choices = c("All countries (recommended)", levels(polymod$participants$country)))),
     list("sliderInput", list("inv_gamma1", label = "Length of latent period", 
-                             min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma1)),
+                             min = 1, max = 14, step = 0.1, value = 1/mean(default_seir_parameters$gamma1))),
     list("sliderInput", list("inv_gamma2", label = "Length of symptoms period", 
-                             min = 1, max = 14, step = 0.1, value = 1/default_seir_parameters$gamma2_i1)),
+                             min = 1, max = 14, step = 0.1, value = 1/mean(default_seir_parameters$gamma2_i1))),
     list("sliderInput", list("p_as", label = "Proportion asymptomatic", 
                              min = 0, max = 1, step = 0.01, value = mean(default_seir_parameters$p_as))))
   
@@ -113,6 +113,15 @@ server <- shinyServer(function(input, output, session) {
     
     y <- seir_model()
     
+    # Grab real data (if needed)
+    if(input$panel1_show_data) {
+      real_data <-
+        filter(cases_csv_clean, country == names(which(countries == input$demographics))) %>%
+        select(time, value)
+    } else {
+      real_data <- NULL
+    }
+    
     scale <- as.numeric(pbc_spread[input$demographics,])
     lt <- " individuals"
     
@@ -140,7 +149,7 @@ server <- shinyServer(function(input, output, session) {
     
     gg <- plot_rcs(y, input$panel1_output_selector, 
              start_date = input$start_date, end_date = input$start_date + input$panel1_xlim, 
-             lab_type = lt) 
+             lab_type = lt, overlay_data = real_data) 
     
     if(input$panel1_scaling == "pct")
       gg <- gg + scale_y_continuous(label = scales::label_percent())

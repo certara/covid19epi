@@ -29,4 +29,35 @@ countries <- as.character(pbc_spread$code)
 names(countries) <- pbc_spread$country
 pbc_spread <- pbc_spread %>% select(-country) %>% column_to_rownames("code")
 
-save(countries, pbc_spread, default_cm, file = "transformed_data/demo_inputs.Rdata")
+
+
+
+
+
+# Johns Hopkins dataset on counts and deaths -----
+
+csv <- read_csv(
+  "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") %>%
+  gather(date, value, -`Province/State`, -`Country/Region`, -Lat, -Long) %>%
+  setNames(c("province", "country", "lat", "long", "date", "value"))
+
+cases_csv_clean <- csv %>%
+  mutate(country = fct_recode(country, "Viet Nam" = "Vietnam",
+                              "United States of America" = "US",
+                              "Venezuela (Bolivarian Republic of)" = "Venezuela",
+                              "United Republic of Tanzania" = "Tanzania")) %>%
+  mutate(date = as.Date(date, format="%m/%d/%y")) %>%
+  group_by(country, date) %>% 
+  summarise(value = sum(value)) %>%
+  rename(time = date) %>%
+  mutate(pop = rowSums(pbc_spread[countries[as.character(country)],]))
+
+
+# Exploration graphs
+cases_csv_clean %>% 
+  mutate(value = (value+1)/pop) %>%
+  ggplot(aes(x=time, y=value, group=country)) + geom_line() + scale_y_log10()
+
+
+# Save all -----
+save(countries, pbc_spread, default_cm, cases_csv_clean, file = "transformed_data/demo_inputs.Rdata")

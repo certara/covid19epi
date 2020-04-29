@@ -40,7 +40,8 @@ ui <- shinyUI(
                           selectInput("panel1_scaling", "Y axis shows", c("Absolute numbers" = "absolute", 
                                                                           "Numbers per 100,000" = "per100k",
                                                                           "Percentages" = "pct"), selected = "absolute"),
-                          checkboxInput("panel1_dnmerge_groups", "Show individual age groups?", value = TRUE)),
+                          checkboxInput("panel1_dnmerge_groups", "Show individual age groups?", value = TRUE),
+                          checkboxInput("panel1_show_data", "Show real data?", value = FALSE)),
                         plotOutput('panel1_plot')
                         
                  )
