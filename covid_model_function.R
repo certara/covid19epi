@@ -54,8 +54,8 @@ run_covid_simulation <- function(method = "desolve",
     times_ode <- y[,"time"]
     y <- y[,-1] #remove time column!
     y <- array(y, dim = c(length(times_ode), N_c, Ngroups),
-               dimnames = list(times_ode, compartment_names, group_names))
-    # dimnames(y) <- list(times_ode, compartment_names, group_names)
+               dimnames = list(times_ode, compartment_names_short, group_names))
+    # dimnames(y) <- list(times_ode, compartment_names_short, group_names)
     return(y)
   } else if(method == "stan"){
     # This is now outdated.
@@ -73,7 +73,7 @@ run_covid_simulation <- function(method = "desolve",
     y <- rstan::extract(fit, "y")[[1]]
     # Extract outputs:
     y <- array(y, dim = c(dim(y)[1], dim(y)[2], N_c, Ngroups),
-               dimnames = list(1:dim(y)[1], times, compartment_names, group_names))
+               dimnames = list(1:dim(y)[1], times, compartment_names_short, group_names))
     return(y[1,,,])
   }
 }
@@ -89,7 +89,8 @@ rescale_rcs <- function(y, pop_sizes=rep(1, dim(y)[3]), merge = FALSE) {
 }
 
 plot_rcs <- function(y, compartment = "R", shade_weeks = c(0,0), 
-                     start_date = NULL, end_date = start_date + 300) {
+                     start_date = NULL, end_date = start_date + 300,
+                     lab_type = "") {
   gg_data <- as.data.frame(y[,compartment,]) %>%
     rownames_to_column("time") %>%
     mutate(time = as.numeric(time)) %>%
@@ -104,7 +105,7 @@ plot_rcs <- function(y, compartment = "R", shade_weeks = c(0,0),
     # ymin=0, ymax=Inf), fill = "skyblue", alpha = .2) +
     geom_line(aes(x=time, y=prevalence, group=age_group, color=age_group)) +
     {if(!is.null(start_date)) scale_x_date(limits = c(as.Date(start_date), as.Date(end_date)))} +
-    labs(y = compartment) +
+    labs(y = paste0(compartment_names[compartment], lab_type)) +
     {if(dim(y)[3] == 1) theme(legend.position = "none")} +
     scale_color_viridis_d()
 }

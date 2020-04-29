@@ -1,5 +1,5 @@
 library(tidyverse)
-theme_set(theme_minimal())
+theme_set(theme_minimal(base_size = 14))
 # source("vaccination_rates.R")
 
 load("transformed_data/demo_inputs.Rdata")
@@ -19,10 +19,13 @@ Ngroups <- length(age_group_names)
 
 
 # Configure names of SEIR compartments -----
-compartment_names <- c("S", "E", "As", "I1", "I2", "I3", "D", "R", "Im")
-names(compartment_names) <- c("Susceptible", "Exposed", "Asymptomatic", "Infected (mild symptoms)", 
-                              "Infected (sever symptoms)", "Critical care", 
+compartment_names_short <- c("S", "E", "As", "I1", "I2", "I3", "D", "R", "Im")
+compartment_names <- c("Susceptible", "Exposed", "Asymptomatic", "Infected (mild symptoms)", 
+                              "Infected (severe symptoms)", "Critical care", 
                               "Deaths (cumulative)", "Recovered", "Immunised")
+# This is madness, but we need it both ways!
+names(compartment_names_short) <- compartment_names
+names(compartment_names) <- compartment_names_short
 
 
 # Hospitalisation and death risk (Ferguson et al) -----

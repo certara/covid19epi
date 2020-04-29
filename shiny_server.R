@@ -76,6 +76,7 @@ server <- shinyServer(function(input, output, session) {
     pars <- seir_pars_nonpi()
     
     # Add pharmaceutical interventions
+    # Prophylaxis (immunised at start)
     if(input$add_pi_toggle == "basic_pro"){
       if(is.null(input$add_pro_efficacy) || is.null(input$add_pro_use) || is.null(input$add_pro_length))
         return(NULL)
@@ -85,8 +86,21 @@ server <- shinyServer(function(input, output, session) {
         pars$N[["Im"]] <- Im
         pars$kappa <- rep(1/(input$add_pro_length*7), pars$Ngroups)
       }
-      
     }
+    # Vaccination (over time)
+    if(input$add_pi_toggle == "vac"){
+      if(is.null(input$add_vac_use) || is.null(input$add_vac_rate) || 
+         is.null(input$add_vac_length) || is.null(input$add_vac_efficacy))
+        return(NULL)
+      Im <- (input$add_vac_use/100)*(input$add_vac_efficacy/100)
+      if(length(pars$N) == 9){
+        pars$N <- (1-Im)*pars$N
+        pars$N[["Im"]] <- Im
+        pars$kappa <- rep(1/(input$add_vac_length*(365/12)), pars$Ngroups)
+        pars$delta <- rep((input$add_vac_rate/100)*(input$add_vac_efficacy/100), pars$Ngroups)
+      }
+    }
+
     
     
     # pars$method <- "stan"
@@ -100,14 +114,17 @@ server <- shinyServer(function(input, output, session) {
     y <- seir_model()
     
     scale <- as.numeric(pbc_spread[input$demographics,])
+    lt <- " individuals"
+    
     if(input$panel1_scaling == "pct"){
+      lt <- " (%)"
       if(input$panel1_dnmerge_groups)
         scale <- rep(1, dim(y)[3]) #everything is just treated as 1
       else
         scale <- scale/sum(scale) #normalise the distribution over age groups
     }
     if(input$panel1_scaling == "per100k"){
-      
+      lt <- " (per 100,000)"
       if(input$panel1_dnmerge_groups)
         scale <- rep(100000, dim(y)[3]) #everything is just treated as 1
       else
@@ -122,7 +139,8 @@ server <- shinyServer(function(input, output, session) {
     y <- rescale_rcs(y, merge = !input$panel1_dnmerge_groups, pop_sizes = scale)
     
     gg <- plot_rcs(y, input$panel1_output_selector, 
-             start_date = input$start_date, end_date = input$start_date + input$panel1_xlim) 
+             start_date = input$start_date, end_date = input$start_date + input$panel1_xlim, 
+             lab_type = lt) 
     
     if(input$panel1_scaling == "pct")
       gg <- gg + scale_y_continuous(label = scales::label_percent())
@@ -177,13 +195,22 @@ server <- shinyServer(function(input, output, session) {
       return(list(
         sliderInput("add_pro_use", "% of population immunised",
                     min = 0, max = 100, value = 5),
-        # sliderInput("add_pro_use_nonkey", "% of non-NPI population immunised",
-                    # min = 0, max = 100, value = 0),
-        HTML("<i>If no NPI is used, we assume that all population is 'non-key'</i>"),
         sliderInput("add_pro_length", "Average length of immunity (weeks)", 
                     min = 0, max = 52, value = 5, step = 1),
         sliderInput("add_pro_efficacy", "Efficacy (% effectively immunised)", 
                     min = 0, max = 100, value = 50)
+      ))
+    
+    if(input$add_pi_toggle == "vac")
+      return(list(
+        sliderInput("add_vac_use", "% of population initialy immunised",
+                    min = 0, max = 100, value = 0),
+        sliderInput("add_vac_rate", "Immunisation rate (% population per month)",
+                    min = 0, max = 100, value = 0),
+        sliderInput("add_vac_length", "Average length of immunity (months)", 
+                    min = 0, max = 60, value = 12, step = 1),
+        sliderInput("add_vac_efficacy", "Efficacy (% effectively immunised)", 
+                    min = 0, max = 100, value = 70)
       ))
     
     if(input$add_pi_toggle == "basic_at")

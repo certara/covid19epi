@@ -42,7 +42,7 @@ seir_ode_ages <- function(times,init,parms){
       force <- 0
       for(j in 1:Ngroups)
         force <- force + q[k] * contacts[k,j] * (init[N_c*(j-1) + 3] + init[N_c*(j-1) + 4] + init[N_c*(j-1) + 5] + init[N_c*(j-1) + 6])
-      ll[i + 1]  <- -force*S + kappa[k]*Im -delta[k]*Im
+      ll[i + 1]  <- -force*S + kappa[k]*Im -delta[k]*S
       ll[i + 2]  <- force*S - gamma1[k]*E
       ll[i + 3]  <- gamma1[k]*E*p_as[k] - gamma2_i1[k]*As
       ll[i + 4]  <- gamma1[k]*E*(1-p_as[k]) - gamma2_i1[k]*I1
@@ -51,7 +51,7 @@ seir_ode_ages <- function(times,init,parms){
       ll[i + 7]  <- gamma2_i3[k]*I3*p_death[k]
       ll[i + 8]  <- gamma2_i3[k]*I3*(1-p_death[k]) + gamma2_i1[k]*I1*(1-p_hosp[k]) + gamma2_i2[k]*I2*(1-p_severe[k]) +
                     gamma2_i1[k]*As
-      ll[i + 9]  <- -kappa[k]*Im
+      ll[i + 9]  <- delta[k]*S - kappa[k]*Im
     }
     list(ll)
   })
