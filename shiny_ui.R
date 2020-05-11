@@ -22,7 +22,8 @@ ui <- shinyUI(
             radioButtons("add_npi_toggle", "", 
                          choices = list("No intervention" = "no",
                                         "Basic NPI (same in all age groups)" = "basic",
-                                        "Detailed NPI definition" = "detailed")),
+                                        "Predefined NPIs" = "predefined",
+                                        "Manual NPI definition" = "detailed")),
             uiOutput("add_npi_ui")),
           column(
             width=2,

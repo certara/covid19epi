@@ -34,7 +34,7 @@ run_covid_simulation <- function(method = "desolve",
                                  p_hosp   = rep(0, Ngroups),
                                  p_death  = rep(0, Ngroups)) {
   N_c <- 9 #number of compartments
-  times <- c(1, seq(2, Nweeks*7, 2))
+  times <- c(1, seq(2, Nweeks*7 - 1, 2))
   
   
   # Initial state:
@@ -49,7 +49,8 @@ run_covid_simulation <- function(method = "desolve",
   if(method == "desolve") {
     # beta <- q
     parms <- listN(q, gamma1, gamma2_i1, gamma2_i2, gamma2_i3, kappa, delta,
-                   p_as, p_severe, p_hosp, p_death, contacts, Ngroups, N_c)
+                   p_as, p_severe, p_hosp, p_death, contacts, Ngroups, N_c,
+                   contacts_scaling)
     y <- run_covid_desolve(times, y0 = c(y0), parms = parms)
     times_ode <- y[,"time"]
     y <- y[,-1] #remove time column!
@@ -58,11 +59,11 @@ run_covid_simulation <- function(method = "desolve",
     # dimnames(y) <- list(times_ode, compartment_names_short, group_names)
     return(y)
   } else if(method == "stan"){
-    # This is now outdated.
+    # This is now outdated. Do not use.
     
     # Set up for Stan:
     stan_inputs <- list(
-      N_t = length(times), N_groups = Ngroups, N_weeks = Nweeks, #=0 because for now we omit vaccination_rates
+      N_t = length(times), N_groups = Ngroups, N_weeks = Nweeks, 
       t = times, 
       x_r = c(contacts_scaling, contacts), 
       y0 = c(y0),

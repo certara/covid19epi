@@ -17,7 +17,7 @@ add_npi <- function(params, prop = 0, scaling_const = 1, int_name = "interventio
   new_int <- params
   Ngroups <- params$Ngroups
   
-  if(is.null(Ngroups))
+  if(is.null(params$Ngroups))
     stop("Need Ngroups to add interventions.")
   if(length(prop) == 1)
     prop <- rep(prop, Ngroups)
@@ -35,8 +35,6 @@ add_npi <- function(params, prop = 0, scaling_const = 1, int_name = "interventio
   
   new_int$contacts <- rbind(
     # Rescale contacts using prop object:
-    # cbind(new_int$contacts*split[1,]*scaling[1,], new_int$contacts*split[2,]*scaling[1,]),
-    # cbind(new_int$contacts*split[1,]*scaling[2,], new_int$contacts*split[2,]*scaling[2,]))
     cbind(new_int$contacts*split[1,]*scaling[1,], new_int$contacts*split[2,]*scaling[1,]),
     cbind(new_int$contacts*split[1,]*scaling[2,], new_int$contacts*split[2,]*scaling[2,]))
   new_int$Ngroups <- Nint*Ngroups

@@ -31,7 +31,10 @@ seir_ode_ages <- function(times,init,parms){
   with(as.list(c(parms)), {
     ll <- vector(length = length(init))
     for(k in 1:Ngroups){
-      # j <- (k-1)*7
+      # Scaling contacts
+      which_week    <- ceiling(times/7)
+      which_weekday <- times %% 7 #for weekend contact scaling
+      
       i <- (k-1)*N_c
       S    <- init[i+1];
       E    <- init[i+2]; As <- init[i+3]; 
@@ -41,7 +44,11 @@ seir_ode_ages <- function(times,init,parms){
       
       force <- 0
       for(j in 1:Ngroups)
-        force <- force + q[k] * contacts[k,j] * (init[N_c*(j-1) + 3] + init[N_c*(j-1) + 4] + init[N_c*(j-1) + 5] + init[N_c*(j-1) + 6])
+        # contacts_scaling is a matrix of Ngroups x Nweeks dimensions
+        force <- force + contacts[k,j] * 
+                 (init[N_c*(j-1) + 3] + init[N_c*(j-1) + 4] + init[N_c*(j-1) + 5] + init[N_c*(j-1) + 6])
+      force <- force * q[k] * contacts_scaling[k, which_week]
+      
       ll[i + 1]  <- -force*S + kappa[k]*Im -delta[k]*S
       ll[i + 2]  <- force*S - gamma1[k]*E
       ll[i + 3]  <- gamma1[k]*E*p_as[k] - gamma2_i1[k]*As
@@ -57,13 +64,9 @@ seir_ode_ages <- function(times,init,parms){
   })
 }
 
-run_covid_desolve <- function(times = 1:100, 
+run_covid_desolve <- function(times, 
                               y0, 
                               parms) {
-  # Without age groups:
-  # parms <- lapply(parms, function(x) if(length(x) > 1) x <- x[1])
-  # lsoda(y0,times,sir_ode,parms)
-  
   # With age groups:
   lsoda(y0,times,seir_ode_ages,parms)
 }

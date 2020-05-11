@@ -51,7 +51,6 @@ convert_settings_to_par <- function(settings, pars) {
   
   # Other settings which do not need conversion:
   # ... for now this is empty 
-    
   pars
 }
   

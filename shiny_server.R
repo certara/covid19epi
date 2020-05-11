@@ -8,11 +8,14 @@ server <- shinyServer(function(input, output, session) {
     # list("country", label = "Social mixing patterns", 
     # choices = c("All countries (recommended)", levels(polymod$participants$country)))),
     list("sliderInput", list("inv_gamma1", label = "Length of latent period", 
-                             min = 1, max = 14, step = 0.1, value = 1/mean(default_seir_parameters$gamma1))),
+                             min = 1, max = 14, step = 0.1, 
+                             value = 1/mean(default_seir_parameters$gamma1))),
     list("sliderInput", list("inv_gamma2", label = "Length of symptoms period", 
-                             min = 1, max = 14, step = 0.1, value = 1/mean(default_seir_parameters$gamma2_i1))),
+                             min = 1, max = 14, step = 0.1, 
+                             value = 1/mean(default_seir_parameters$gamma2_i1))),
     list("sliderInput", list("p_as", label = "Proportion asymptomatic", 
-                             min = 0, max = 1, step = 0.01, value = mean(default_seir_parameters$p_as))))
+                             min = 0, max = 1, step = 0.01, 
+                             value = mean(default_seir_parameters$p_as))))
   
   output$panel1_settings <- renderUI({
     lapply(inputs_to_manipulate, function(x) {
@@ -36,19 +39,21 @@ server <- shinyServer(function(input, output, session) {
       }
       
       if(input$add_npi_toggle == "detailed"){
-        ngroups <- length(pars$group_names)
-        prop <- vector(length = ngroups); scale <- vector(length = ngroups)
-        for(i in 1:ngroups){
-          if(!is.null(input[[paste0("add_npi_prop",  i)]]) && 
-             !is.null(input[[paste0("add_npi_scale",  i)]])){
-            
-            prop[i] <- input[[paste0("add_npi_prop",  i)]]
-            scale[i] <- input[[paste0("add_npi_scale",  i)]]
-          }
-        }
-        pars <- add_npi(pars, 
-                        prop = prop/100, 
-                        scaling_const = 1 - scale/100)
+        # For now disabled.
+        
+        # ngroups <- length(pars$group_names)
+        # prop <- vector(length = ngroups); scale <- vector(length = ngroups)
+        # for(i in 1:ngroups){
+        #   if(!is.null(input[[paste0("add_npi_prop",  i)]]) && 
+        #      !is.null(input[[paste0("add_npi_scale",  i)]])){
+        #     
+        #     prop[i] <- input[[paste0("add_npi_prop",  i)]]
+        #     scale[i] <- input[[paste0("add_npi_scale",  i)]]
+        #   }
+        # }
+        # pars <- add_npi(pars, 
+        #                 prop = prop/100, 
+        #                 scaling_const = 1 - scale/100)
       }
     }
     pars
@@ -78,7 +83,9 @@ server <- shinyServer(function(input, output, session) {
     # Add pharmaceutical interventions
     # Prophylaxis (immunised at start)
     if(input$add_pi_toggle == "basic_pro"){
-      if(is.null(input$add_pro_efficacy) || is.null(input$add_pro_use) || is.null(input$add_pro_length))
+      if(is.null(input$add_pro_efficacy) || 
+         is.null(input$add_pro_use) || 
+         is.null(input$add_pro_length))
         return(NULL)
       Im <- (input$add_pro_use/100)*(input$add_pro_efficacy/100)
       if(length(pars$N) == 9){
@@ -170,21 +177,28 @@ server <- shinyServer(function(input, output, session) {
           sliderInput("add_intervention_prop", "To what % of population?", 
                       min = 0, max = 100, value = 50),
           sliderInput("add_intervention_scaling", "How much to decrease contacts? (in %)", 
-                      min = 0, max = 100, value = 50)
+                      min = 0, max = 100, value = 50),
+          dateInput('add_intervention_date', label = "NPI starts on", value = "2020-02-01")
         ))
       if(input$add_npi_toggle == "detailed"){
-        pars <- seir_pars_no_i()
-        ll <- list()
-        for(i in 1:length(pars$group_names)) {
-          ll[[paste0("add_npi_prop", i)]] <- 
-            sliderInput(paste0("add_npi_prop", i), 
-                        label = paste0("Proportion: ", pars$group_names[i]), min = 0, max = 100, value = 100)
-          ll[[paste0("add_npi_scale", i)]] <- 
-            sliderInput(paste0("add_npi_scale", i), 
-                        label = paste0("Scaling: ", pars$group_names[i]), min = 0, max = 100, value = 100)
-        }
-        return(ll)
-        # return(do.call(flowLayout, ll))
+        # pars <- seir_pars_no_i()
+        # ll <- list()
+        # for(i in 1:length(pars$group_names)) {
+        #   ll[[paste0("add_npi_prop", i)]] <- 
+        #     sliderInput(paste0("add_npi_prop", i), 
+        #                 label = paste0("Proportion: ", 
+        #                                pars$group_names[i]), min = 0, max = 100, value = 100)
+        #   ll[[paste0("add_npi_scale", i)]] <- 
+        #     sliderInput(paste0("add_npi_scale", i), 
+        #                 label = paste0("Scaling: ", 
+        #                                pars$group_names[i]), min = 0, max = 100, value = 100)
+        # }
+        # return(ll)
+        return(list(HTML(
+          "<i>For this version of the app the detailed definition of NPIs is disabled.</i>")))
+      }
+      if(input$add_npi_toggle == "predefined"){
+
       }
     }
     return(NULL)
@@ -195,7 +209,8 @@ server <- shinyServer(function(input, output, session) {
     if(input$add_pi_toggle == "detailed_pro"){
       pars <- seir_pars_nonpi()
       ll <- lapply(as.list(pars$group_names), function(x) {
-        sliderInput(paste0("add_pi_", which(pars$group_names == x)), label = x, min = 0, max = 1, value = 0)
+        sliderInput(paste0("add_pi_", which(pars$group_names == x)), 
+                    label = x, min = 0, max = 1, value = 0)
       })
       return(do.call(flowLayout, ll))
     }
@@ -241,6 +256,7 @@ server <- shinyServer(function(input, output, session) {
     N <- pbc_spread[input$demographics,]/1e06
     ggplot(gather(N), aes(x=key, y=value)) + 
       geom_bar(fill = "cornflowerblue", stat = "identity") + 
-      labs(x="", y="N (million)")
+      labs(x="", y="N (million)") +
+      theme_minimal(base_size = 10)
   })
 })
