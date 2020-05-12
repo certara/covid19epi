@@ -30,64 +30,33 @@ server <- shinyServer(function(input, output, session) {
   seir_pars_nonpi <- reactive({
     pars <- seir_pars_no_i()
     
-    if(!is.null(input$add_npi_toggle)){
-      if(input$add_npi_toggle == "basic"){
-        # Old way: dividing all age groups into key workers and non-key pop
-        # if(!is.null(input$add_npi_prop) && !is.null(input$add_npi_scaling))
-        #   pars <- add_npi(pars, 
-        #                   prop = input$add_npi_prop/100, 
-        #                   scaling_const = 1 - input$add_npi_scaling/100)
-        
-        # New way: use contact scaling matrix
-        if(!is.null(input$add_npi_prop) && !is.null(input$add_npi_scaling) && 
-           !is.null(input$add_npi_date)){
-          week_to_start <- ceiling(as.numeric(input$add_npi_date - input$start_date + 1)/7)
-          tot_weeks <- pars$Nweeks
-          cscale <- input$add_npi_scaling/100
-          if(week_to_start > tot_weeks)
-            stop("Can't apply NPI after more than", tot_weeks, "weeks since epidemic starts")
-          pars$contacts_scaling <- matrix(c(rep(1, (week_to_start-1)*pars$Ngroups), 
-                                            rep(cscale, (tot_weeks-week_to_start+1)*pars$Ngroups)),
-                                          pars$Ngroups, tot_weeks)
-          
-        }
+    # Old way: dividing all age groups into key workers and non-key pop
+    if(input$add_npi_prop > 0)
+      pars <- add_npi(pars,
+                      prop = input$add_npi_prop/100,
+                      scaling_const = 1) #we don't scale contacts -- we use the "new way" below
+    
+    # New way: use contact scaling matrix
+    if(input$add_npi_scaling > 0){
+      week_to_start <- ceiling(as.numeric(input$add_npi_date - input$start_date + 1)/7)
+      tot_weeks <- pars$Nweeks
+      if(!is.null(input$add_npi_diff_young) && !is.null(input$add_npi_diff_old)){
+        cscale <- 1 - c(rep(input$add_npi_diff_young, 2), 
+                        rep(input$add_npi_scaling, 5), 
+                        rep(input$add_npi_diff_old, 2))/100
+      }else{  
+        cscale <- 1 - rep(input$add_npi_scaling/100, 9)
       }
+      if(week_to_start > tot_weeks)
+        stop("Can't apply NPI after more than", tot_weeks, "weeks since epidemic starts")
+      pars$contacts_scaling <- matrix(c(rep(1, (week_to_start-1)*pars$Ngroups), 
+                                        rep(cscale, (tot_weeks-week_to_start+1))),
+                                      pars$Ngroups, tot_weeks)
       
-      if(input$add_npi_toggle == "detailed"){
-        # For now disabled.
-        
-        # ngroups <- length(pars$group_names)
-        # prop <- vector(length = ngroups); scale <- vector(length = ngroups)
-        # for(i in 1:ngroups){
-        #   if(!is.null(input[[paste0("add_npi_prop",  i)]]) && 
-        #      !is.null(input[[paste0("add_npi_scale",  i)]])){
-        #     
-        #     prop[i] <- input[[paste0("add_npi_prop",  i)]]
-        #     scale[i] <- input[[paste0("add_npi_scale",  i)]]
-        #   }
-        # }
-        # pars <- add_npi(pars, 
-        #                 prop = prop/100, 
-        #                 scaling_const = 1 - scale/100)
-      }
     }
+    
     pars
   })
-  
-  
-  
-  
-  # Starting population -----
-  output$set_starting_ui <- renderUI({
-    if(input$set_starting_toggle == 0)
-      return(selectInput("initial_infected_prop", label = "Initial infected proportion",
-                         choices = c("One in million" = 1e-06, "Five per million" = 5e-06,
-                                     "One per 100,000" = 1e-05, "One per 10,000" = 1e-04,
-                                     "One per 1,000" = 1e-03), selected = 1e-04))
-    if(input$set_starting_toggle == 1)
-      return(NULL)
-  })
-  
   
   seir_model <- reactive({
     if(is.null(seir_pars_nonpi()))
@@ -122,10 +91,13 @@ server <- shinyServer(function(input, output, session) {
         pars$delta <- rep((input$add_vac_rate/100)*(input$add_vac_efficacy/100), pars$Ngroups)
       }
     }
+    if(input$add_pi_toggle == "basic_at"){
+      if(is.null(input$add_at_use) || is.null(input$add_at_gamma))
+        return(NULL)
+        p <- (input$add_at_use/100)
+        pars$gamma2_i1 <- (1-p)*pars$gamma2_i1 + p*rep(1/input$add_at_gamma, 9)
+    }
     
-    
-    
-    # pars$method <- "stan"
     do.call(run_covid_simulation, pars)
   })
   
@@ -164,14 +136,7 @@ server <- shinyServer(function(input, output, session) {
         scale <- 100000*scale/sum(scale) #normalise the distribution over age groups
     }
     
-    # if(!is.null(input$add_npi_prop) && input$add_npi_toggle == "basic"){
-    #   pr <- input$add_npi_prop/100
-    #   scale <- c((1-pr)*scale, (pr)*scale)
-    # }
-    
     y <- rescale_rcs(y, merge = !input$panel1_dnmerge_groups, pop_sizes = scale)
-    
-    
     
     gg <- plot_rcs(y, input$panel1_output_selector, 
                    start_date = input$start_date, end_date = input$start_date + input$panel1_xlim, 
@@ -188,42 +153,6 @@ server <- shinyServer(function(input, output, session) {
   
   
   # UI renders ------
-  
-  output$add_npi_ui <- renderUI({
-    if(!is.null(input$add_npi_toggle)){
-      if(input$add_npi_toggle == "basic")
-        return(list(
-          sliderInput("add_npi_prop", "To what % of population?", 
-                      min = 0, max = 100, value = 50),
-          sliderInput("add_npi_scaling", "How much to decrease contacts? (in %)", 
-                      min = 0, max = 100, value = 50),
-          dateInput('add_npi_date', label = "NPI starts on", value = "2020-02-01")
-        ))
-      if(input$add_npi_toggle == "detailed"){
-        # pars <- seir_pars_no_i()
-        # ll <- list()
-        # for(i in 1:length(pars$group_names)) {
-        #   ll[[paste0("add_npi_prop", i)]] <- 
-        #     sliderInput(paste0("add_npi_prop", i), 
-        #                 label = paste0("Proportion: ", 
-        #                                pars$group_names[i]), min = 0, max = 100, value = 100)
-        #   ll[[paste0("add_npi_scale", i)]] <- 
-        #     sliderInput(paste0("add_npi_scale", i), 
-        #                 label = paste0("Scaling: ", 
-        #                                pars$group_names[i]), min = 0, max = 100, value = 100)
-        # }
-        # return(ll)
-        return(list(HTML(
-          "<i>For this version of the app the detailed definition of NPIs is disabled.</i>")))
-      }
-      if(input$add_npi_toggle == "predefined"){
-        
-      }
-    }
-    return(NULL)
-    
-    
-  })
   output$add_pi_ui <- renderUI({
     if(input$add_pi_toggle == "detailed_pro"){
       pars <- seir_pars_nonpi()
@@ -258,13 +187,14 @@ server <- shinyServer(function(input, output, session) {
     
     if(input$add_pi_toggle == "basic_at")
       return(list(
-        sliderInput("add_at_use_key", "% of NPI ('key workers') treated",
-                    min = 0, max = 100, value = 5),
-        sliderInput("add_at_use_nonkey", "% of non-NPI population treated",
+        # sliderInput("add_at_use_key", "% of NPI ('key workers') treated",
+                    # min = 0, max = 100, value = 5),
+        HTML("<i>In the current version of the app the effect of active treatment is accounted
+              for by adjusting the average duration of illness</i>"),
+        sliderInput("add_at_use", "% of infected individuals treated",
                     min = 0, max = 100, value = 0),
-        HTML("<i>If no NPI is used, we assume that all population is 'non-key'</i>"),
         sliderInput("add_at_gamma", "Average duration of illness in treated", 
-                    min = 0, max = 52, value = 5, step = 1)
+                    min = 0, max = 10, value = 4, step = .1)
       ))
     
     if(input$add_pi_toggle == "no")
@@ -281,11 +211,37 @@ server <- shinyServer(function(input, output, session) {
   
   
   
+  # UI -----
+  output$add_npi_diff_ui <- renderUI({
+    if(input$add_npi_diff_toggle){
+      list(
+        sliderInput("add_npi_diff_young", "Contacts decrease (%) in under 20's", 
+                    min = 0, max = 100, value = input$add_npi_scaling),
+        sliderInput("add_npi_diff_old",  "Contacts decrease (%) in over 70's", 
+                    min = 0, max = 100, value = input$add_npi_scaling),
+        HTML("Decrease of contacts in the individuals aged 20-70 is controlled by the 'main' decrease
+              parameter above.")
+      )
+    }else{
+      return(NULL)
+    }
+  })
+  
+  output$add_npi_onoff_ui <- renderUI({
+    if(input$add_npi_onoff_toggle){
+      HTML("In this version of the app the on and off triggers are not yet enabled.")
+    }else{
+      return(NULL)
+    }
+  })
+  
+  
   # Legends -----
   
   output$panel1_legend <- renderUI({
     if(input$panel1_show_data)
-      HTML("Data are based on <a href='https://github.com/CSSEGISandData/'>Johns Hopkins-curated dataset</a>",
+      HTML("Data (black points in the plot) are based on 
+           <a href='https://github.com/CSSEGISandData/'>Johns Hopkins-curated dataset</a>",
            "of mortality and recovered cases. You need to select appropriate outcome ('Display...') and 
            uncheck 'show individual age groups' option, as data are only available cumulatively. You can only
            compare with absolute numbers.")

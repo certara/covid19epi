@@ -117,7 +117,8 @@ plot_rcs <- function(y, compartment = "R", shade_weeks = c(0,0),
   if(!is.null(overlay_data) && nrow(overlay_data) > 0){
     # overlay_data$time <- as.Date(overlay_data$time, origin = start_date)
     gg <- gg +
-      geom_point(aes(x=time, y=value), data = overlay_data)
+      geom_point(aes(x=time, y=value), data = overlay_data) +
+      geom_line(aes(x=time, y=value), data = overlay_data)
   }
   gg
 }

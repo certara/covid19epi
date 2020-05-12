@@ -46,9 +46,9 @@ default_seir_parameters <- list(
   Ngroups = 9, Nweeks = 52,
   group_names = age_group_names,
   contacts = default_cm, 
-  r0 = 2.6,
+  r0 = 2.4,
   N = c("S" = 1 - 1e-06, "E" = 1e-06, "As" = 0, "I1" = 0, "I2" = 0, "I3" = 0, "D" = 0, "R" = 0, "Im" = 0),
-  q = rep(2.6/(avg_contacts_number*6.5), Ngroups), #R0 (2.4) = contacts (13.48) * average length (6.5) * q
+  q = rep(2.4/(avg_contacts_number*6.5), Ngroups), #R0 (2.4) = contacts (13.48) * average length (6.5) * q
   gamma1    = rep(1/5.1, Ngroups), 
   gamma2_i1 = rep(1/6.5, Ngroups), 
   gamma2_i2 = rep(1/6.5, Ngroups), 

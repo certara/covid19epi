@@ -31,15 +31,6 @@ convert_settings_to_par <- function(settings, pars) {
   # R0 = q*avg_contacts*gamma2
   if(!is.null(settings$r0))  
     pars[["q"]] <- settings$r0/(13.5*(1/pars[["gamma2_i1"]]))
-  
-  # Contacts
-  # if(!is.null(settings$country))
-  #   if(settings$country != "All countries (recommended)")
-  #   pars[["contacts"]] <- contact_matrix(polymod, 
-  #                                        countries = settings$country,
-  #                                        age.limits = c(0, 10, 20, 30, 40, 50, 60, 70, 80))$matrix
-  
-  # pars$N <- input$demographics
     
   # Initially exposed proportion
   if(!is.null(settings$initial_infected_prop)){
