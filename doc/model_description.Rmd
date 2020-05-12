@@ -1,7 +1,7 @@
 ---
-title: "Epidemiological model used by the simulation tool"
+title: "Epidemiological model used in the simulations"
 author: "Witold Wiecek, Certara UK Ltd"
-date: "May 2020"
+date: "`r Sys.Date()`"
 output: 
   html_document:
     toc: true
@@ -47,7 +47,7 @@ Note how to the four "main" groups (S, E, I, R) we added: number of dead (due to
 
 ## Force of infection
 
-If modelling only a single group, $\beta$ is given as a factor of $q$, probability of virus transmission when making contact, $c$, number of  contacts with other individuals (in an unit of time) and proportion of infected individuals, $I_1 + I_2+ I_3$. When modelling many groups, $\beta$ links them together by allowing for the fact that individuals in "our" group make contacts with "other" groups. Therefore if we denote by $k$all available groups, $\beta = \sum q c_k I_k$ (where $I_k$ is shorthand for "all infected in group $k$"). 
+If modelling only a single group, $\beta$ is given as a factor of $q$, probability of virus transmission when making contact, $c$, number of  contacts with other individuals (in an unit of time) and proportion of infected individuals, $I_1 + I_2+ I_3$. When modelling many groups, $\beta$ links them together by allowing for the fact that individuals in "our" group make contacts with "other" groups. Therefore if we denote by $k$ all available groups, $\beta = \sum q c_k I_k$ (where $I_k$ is shorthand for "all infected in group $k$"). 
 
 
 ## Accounting for asymptomatic patients
@@ -73,23 +73,37 @@ Over time susceptible individuals can be immunised (either actively or passively
 
 $$
 \begin{align}
-\text{d}S/\text{d}t   &= \beta S - \delta S \\
-\text{d}A/\text{d}t   &= p_A\gamma_1 E   - \gamma_2A \\
-\text{d}I_1/\text{d}t &= (1-p_A)\gamma_1 E   - \gamma_2I_1 \\
-\text{d}R/\text{d}t   &= \gamma_2 I_1 (1-p_H) + \gamma_2A + \gamma_3 I_2 (1-p_C) +\gamma_4I_3 (1-p_D) \\
+\text{d}S/\text{d}t   &= \beta S - \delta S + \kappa V \\
+\text{d}V/\text{d}t   &= \delta S - \kappa V \\
 \end{align}
 $$
 
+This model makes a simplistic assumption that only susceptible individuals are vaccinated. This approximation is best justified when infection rates are low.
 
 
 ## Modelling many groups
 
-* We model many ages and special status or level of compliance with social distancing
-* This introduces need for a contact matrix
-* Refining variation in R0 (Wearing et al)
-* Among other things, this allows us to account for NPI and PI
+We further modify the above model by partitioning our population into many groups. In this new model, the differential equations are unchanged, but we must update the definition of the force of infection parameter in the way we previously discussed. We divide our population in two ways:
+
+### Breakdown into age groups
+
+We use POLYMOD study dataset (@mossong_social_2008) available in `socialmixr` R package to reflect frequencies of contacts across different age groups. This is a standard approach in epidemiological modelling, although it is likely to strongly determine age-specific patterns of infection and does not take into account a country-specific cultural/social factors. Under this implicit model, the infection rates in the elderly are relatively lower than in the children and adults.
+
+The default contacts matrix (average number of daily contacts made between members of different age groups, rows are "from" and columns are "to" contacts) is as follows:
+
+```{r, include = FALSE}
+library(socialmixr)
+cm <- contact_matrix(polymod, age.limits = c(0, 10, 20, 30, 40, 50, 60, 70, 80))$matrix
+```
+
+```{r, echo = FALSE}
+knitr::kable(cm, digits = 2)
+```
 
 
+### Breakdown into "key workers" to better account for spreading patterns
+
+We use an additional grouping to divide individuals within each age group into those who are affected by social distancing measures and those who are not. The latter can be key workers or simply non-compliant individuals. This is done to allow for differential spread across different groups. The proportion of key workers can be adjusted by the user in the model settings.
 
 
 
