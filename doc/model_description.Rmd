@@ -1,7 +1,7 @@
 ---
-title: "Epidemiological model used by the tool"
-author: "Witold Wiecek (Certara)"
-date: "April 2020"
+title: "Epidemiological model used by the simulation tool"
+author: "Witold Wiecek, Certara UK Ltd"
+date: "May 2020"
 output: 
   html_document:
     toc: true
@@ -29,27 +29,60 @@ We first present the model within the context of any given group. By group we me
 
 SEIR model is a set of [ordinary differential equations](https://en.wikipedia.org/wiki/Ordinary_differential_equation), a mathematical way of characterising the rate (number of individuals per unit of time) at which number of susceptible/exposed/infected/recovered individuals grows. Parameters are force of infection $\beta$ (more on which below) and $\gamma$, reciprocal of time spent in exposed and infected state.
 
-Formally, we can write the model using the following set of ODEs:
+Formally, we can write the model using the following set of ODEs (__the model presented below is not yet complete, but we present it in parts for better exposition__):
 
 $$
-\text{d}E/\text{d}t = \beta S - \gamma_1 E \\
-\text{d}I_1/\text{d}t = \gamma_1 E   - \gamma_2I_1 \\
-\text{d}I_2/\text{d}t = p_H\gamma_2 I_1 - \gamma_3I_2 \\
-\text{d}I_3/\text{d}t = p_C\gamma_3 I_2 - \gamma_4I_3 \\
-\text{d}R/\text{d}t = \gamma_2 I_1 (1-p_H) + \gamma_3 I_2 (1-p_C) +\gamma_2I_1 (1-p_D) \\
-\text{d}D/\text{d}t = \gamma_4I_3p_D
+\begin{align}
+\text{d}S/\text{d}t   &= -\beta S \\
+\text{d}E/\text{d}t   &= \beta S - \gamma_1 E \\
+\text{d}I_1/\text{d}t &= \gamma_1 E   - \gamma_2I_1 \\
+\text{d}I_2/\text{d}t &= p_H\gamma_2 I_1 - \gamma_3I_2 \\
+\text{d}I_3/\text{d}t &= p_C\gamma_3 I_2 - \gamma_4I_3 \\
+\text{d}R/\text{d}t   &= \gamma_2 I_1 (1-p_H) + \gamma_3 I_2 (1-p_C) +\gamma_4I_3 (1-p_D) \\
+\text{d}D/\text{d}t   &= \gamma_4I_3p_D
+\end{align}
 $$
 
-Note how to the four "main" groups (S, E, I, R) we added: number of dead (due to the virus) individuals $D$ and we divide infected into those with mild symptoms ($I_1$), severe symptoms requiring hospitalisation ($I_2$) and in critical care ($I_3$). We assume that individuals progress from I1 to I2 to I3, with possibility of recovery at any stage described by parameters $p_H$ (probability of hospitalisation), $p_C$ (proability of needing critical care) and $p_D$ (probability of death).
+Note how to the four "main" groups (S, E, I, R) we added: number of dead (due to the virus) individuals $D$ and we divide infected into those with mild symptoms ($I_1$), severe symptoms requiring hospitalisation ($I_2$) and in critical care ($I_3$). We assume that individuals progress from I1 to I2 to I3, with possibility of recovery at any stage described by parameters $p_H$ (probability of hospitalisation), $p_C$ (probability of needing critical care) and $p_D$ (probability of death).
 
 ## Force of infection
 
 If modelling only a single group, $\beta$ is given as a factor of $q$, probability of virus transmission when making contact, $c$, number of  contacts with other individuals (in an unit of time) and proportion of infected individuals, $I_1 + I_2+ I_3$. When modelling many groups, $\beta$ links them together by allowing for the fact that individuals in "our" group make contacts with "other" groups. Therefore if we denote by $k$all available groups, $\beta = \sum q c_k I_k$ (where $I_k$ is shorthand for "all infected in group $k$"). 
 
 
+## Accounting for asymptomatic patients
+
+Various sources (see @day_covid-19_2020 and @noauthor_covid-19_nodate) suggest high proportion of COVID-19 patients have asymptomatic transmission. By default we use 43% (captured as a parameter $p_A$ below), which is supported by some meta-analysis results and has been used by other authors. To account for asymptomatic individuals, we introduce additional compartment in our equations, $A$, and modify them as follows:
+
+$$
+\begin{align}
+\text{d}E/\text{d}t   &= \beta S - \gamma_1 E \\
+\text{d}A/\text{d}t   &= p_A\gamma_1 E   - \gamma_2A \\
+\text{d}I_1/\text{d}t &= (1-p_A)\gamma_1 E   - \gamma_2I_1 \\
+\text{d}R/\text{d}t   &= \gamma_2 I_1 (1-p_H) + \gamma_2A + \gamma_3 I_2 (1-p_C) +\gamma_4I_3 (1-p_D) \\
+\end{align}
+$$
+
+We also modify our force of infection equations by adding $A$ to otherwise infected individuals ($I_1$, $I_2$, $I_3$).
 
 
-# Modelling many groups
+
+## Accounting for vaccination and prophylaxis
+
+Over time susceptible individuals can be immunised (either actively or passively) and immune individuals can use immunity. We can account for it by adding another compartment into the model and appropriate "flows" in ($\delta$, immunisation) and out ($\kappa$, loss of immunity)
+
+$$
+\begin{align}
+\text{d}S/\text{d}t   &= \beta S - \delta S \\
+\text{d}A/\text{d}t   &= p_A\gamma_1 E   - \gamma_2A \\
+\text{d}I_1/\text{d}t &= (1-p_A)\gamma_1 E   - \gamma_2I_1 \\
+\text{d}R/\text{d}t   &= \gamma_2 I_1 (1-p_H) + \gamma_2A + \gamma_3 I_2 (1-p_C) +\gamma_4I_3 (1-p_D) \\
+\end{align}
+$$
+
+
+
+## Modelling many groups
 
 * We model many ages and special status or level of compliance with social distancing
 * This introduces need for a contact matrix
@@ -57,14 +90,7 @@ If modelling only a single group, $\beta$ is given as a factor of $q$, probabili
 * Among other things, this allows us to account for NPI and PI
 
 
-# Accounting for interventions with the SEIR model
 
-Possible impact of the intervention:
-
-* Decrease likelihood of transmission (lower/no susceptibility)
-* Shorten duration of illness
-* Decrease number of contacts, especially among certain groups (e.g. schoolchildren when closing schools)
-* Reduce probability of hospitalisation or death among infected
 
 
 # References
